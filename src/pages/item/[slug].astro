@@ -87,6 +87,9 @@ const safeFaqJsonLd = sanitizeJsonLd(faqJsonLd);
         <div class="item-badges">
           <span class="badge badge-category">{product.category}</span>
           <span class="badge badge-category">{product.brand}</span>
+          {product.hasActivePromo && (
+            <span class="badge badge-promo">{product.promo_tag}</span>
+          )}
           {product.isGodTier ? (
             <span class="badge badge-god">達神價門檻</span>
           ) : (
@@ -170,6 +173,14 @@ const safeFaqJsonLd = sanitizeJsonLd(faqJsonLd);
           <div class="offer-price-now tabular-nums">
             NT$ {formatCurrency(product.coupang_price)}
           </div>
+          {product.hasActivePromo && (
+            <div class="offer-promo-banner tabular-nums">
+              <span class="badge badge-promo">{product.promo_tag}</span>
+              {product.priceDropAmount > 0 && (
+                <span>較上次追蹤省 NT$ {formatCurrency(product.priceDropAmount)}</span>
+              )}
+            </div>
+          )}
 
           <ul class="offer-meta-list tabular-nums">
             <li>

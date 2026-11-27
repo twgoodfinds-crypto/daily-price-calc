@@ -12,6 +12,7 @@ import {
 
 const products = getAllProductsWithMetrics();
 const godTierCount = products.filter((item) => item.isGodTier).length;
+const promoCount = products.filter((item) => item.hasActivePromo).length;
 const maxDiscount = Math.max(...products.map((item) => item.savingsPercent));
 
 const categoryCounts = new Map<string, number>();
@@ -95,6 +96,13 @@ const pageDescription =
         <span>只看達神價門檻</span>
       </label>
 
+      {promoCount > 0 && (
+        <label class="promo-toggle">
+          <input type="checkbox" id="promo-only" />
+          <span>只看活動特價 ({promoCount})</span>
+        </label>
+      )}
+
       <input
         type="search"
         id="keyword-search"
@@ -123,10 +131,11 @@ const pageDescription =
   <section id="product-grid" class="product-grid" aria-label="箱購日用品單價清單">
     {products.map((item, idx) => (
       <article
-        class={`product-card ${item.isGodTier ? 'is-god-tier' : ''}`}
+        class={`product-card ${item.isGodTier ? 'is-god-tier' : ''} ${item.hasActivePromo ? 'is-promo-active' : ''}`}
         data-index={idx}
         data-category={item.category}
         data-god-tier={item.isGodTier ? 'true' : 'false'}
+        data-promo={item.hasActivePromo ? 'true' : 'false'}
         data-unit-price={item.unitPrice}
         data-coupang-price={item.coupang_price}
         data-unit-name={item.unit_name}
@@ -138,6 +147,7 @@ const pageDescription =
           <div class="card-header-left">
             <span class="card-seq tabular-nums">No.{String(idx + 1).padStart(2, '0')}</span>
             <span class="badge badge-category">{item.category}</span>
+            {item.hasActivePromo && <span class="badge badge-promo">{item.promo_tag}</span>}
           </div>
           {item.isGodTier ? (
             <span class="badge badge-god">達神價門檻</span>
@@ -198,6 +208,9 @@ const pageDescription =
             <span class="coupang-tag">酷澎現價</span>
             <strong>NT$ {formatCurrency(item.coupang_price)}</strong>
             <span class="regular-price-strike">NT$ {formatCurrency(item.regular_price)}</span>
+            {item.priceDropAmount > 0 && (
+              <span class="price-drop-tag">↓降NT${formatCurrency(item.priceDropAmount)}</span>
+            )}
           </div>
           <span class="badge badge-save">-{formatPercent(item.savingsPercent)}%</span>
         </div>
@@ -240,6 +253,7 @@ const pageDescription =
 <script>
   const filterButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-filter-category]'));
   const godTierCheckbox = document.getElementById('god-tier-only');
+  const promoCheckbox = document.getElementById('promo-only');
   const keywordInput = document.getElementById('keyword-search');
   const sortSelect = document.getElementById('sort-select');
   const grid = document.getElementById('product-grid');
@@ -272,6 +286,7 @@ const pageDescription =
 
   function applyFiltersAndSort() {
     const onlyGodTier = godTierCheckbox instanceof HTMLInputElement && godTierCheckbox.checked;
+    const onlyPromo = promoCheckbox instanceof HTMLInputElement && promoCheckbox.checked;
     const keyword =
       keywordInput instanceof HTMLInputElement ? keywordInput.value.trim().toLowerCase() : '';
     const sortMode = sortSelect instanceof HTMLSelectElement ? sortSelect.value : 'default';
@@ -301,13 +316,15 @@ const pageDescription =
     sortedCards.forEach((card) => {
       const cardCat = card.dataset.category || '';
       const isGod = card.dataset.godTier === 'true';
+      const isPromo = card.dataset.promo === 'true';
       const searchCorpus = card.dataset.search || '';
 
       const matchesCategory = activeCategory === '全部' || cardCat === activeCategory;
       const matchesGod = !onlyGodTier || isGod;
+      const matchesPromo = !onlyPromo || isPromo;
       const matchesKeyword = !keyword || searchCorpus.includes(keyword);
 
-      const isVisible = matchesCategory && matchesGod && matchesKeyword;
+      const isVisible = matchesCategory && matchesGod && matchesPromo && matchesKeyword;
       card.hidden = !isVisible;
       card.classList.toggle('is-filtered-out', !isVisible);
       if (isVisible) {
@@ -409,6 +426,10 @@ const pageDescription =
     applyFiltersAndSort();
     emitFilterEvent('god_tier_toggle');
   });
+  promoCheckbox?.addEventListener('change', () => {
+    applyFiltersAndSort();
+    emitFilterEvent('promo_toggle');
+  });
   keywordInput?.addEventListener('input', () => {
     applyFiltersAndSort();
     window.clearTimeout(keywordTrackTimer);
@@ -424,6 +445,7 @@ const pageDescription =
   resetBtn?.addEventListener('click', () => {
     activeCategory = '全部';
     if (godTierCheckbox instanceof HTMLInputElement) godTierCheckbox.checked = false;
+    if (promoCheckbox instanceof HTMLInputElement) promoCheckbox.checked = false;
     if (keywordInput instanceof HTMLInputElement) keywordInput.value = '';
     if (sortSelect instanceof HTMLSelectElement) sortSelect.value = 'default';
     syncCategoryButtons();

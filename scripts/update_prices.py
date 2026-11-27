@@ -206,10 +206,15 @@ def pick_matching_candidate(
     pool: list[CoupangCandidate],
     spec: dict[str, Any],
     current_price: int,
+    *,
+    allow_deep_promo: bool = False,
 ) -> CoupangCandidate | None:
     target_pid = str(spec["product_id"]).strip()
     tokens = [str(t).strip().lower() for t in spec.get("required_tokens", []) if str(t).strip()]
     min_price = int(spec.get("min_price", 1))
+    if allow_deep_promo and tokens:
+        # 大促或限時特賣時只要包數/規格關鍵字完全吻合，放寬最低價下限以捕捉深折活動價
+        min_price = max(30, int(min_price * 0.72))
     max_price = int(spec.get("max_price", 999999))
 
     matches: list[CoupangCandidate] = []
@@ -250,12 +255,18 @@ def build_arg_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="一併將所有比對到的商品 image_url 同步成 API 最新回傳的圖片網址",
     )
+    parser.add_argument(
+        "--promo-label",
+        default="",
+        help="指定大檔降價時的活動標籤（例如：黑五特價、雙12特價；也可由 COUPANG_PROMO_LABEL 環境變數帶入）",
+    )
     return parser
 
 
 def main() -> int:
     _configure_stdio_utf8()
     args = build_arg_parser().parse_args()
+    promo_label_override = (args.promo_label or os.environ.get("COUPANG_PROMO_LABEL", "")).strip()
 
     access_key, secret_key, domain = load_coupang_credentials(PROJECT_ROOT)
     if not access_key or not secret_key:
@@ -282,7 +293,12 @@ def main() -> int:
                 pool_cache[key] = []
         return pool_cache[key]
 
-    today_str = datetime.now(TAIPEI_TZ).date().isoformat()
+    today_date = datetime.now(TAIPEI_TZ).date()
+    today_str = today_date.isoformat()
+    promo_3d_str = (today_date + timedelta(days=3)).isoformat()
+    promo_1d_str = (today_date + timedelta(days=1)).isoformat()
+    goldbox_pool = get_pool("goldbox", "goldbox")
+
     changed_count = 0
     matched_count = 0
     skipped_count = 0
@@ -294,14 +310,25 @@ def main() -> int:
             skipped_count += 1
             continue
 
-        pool = get_pool(str(spec["source_type"]), str(spec["source_arg"]))
         cur_price = int(item.get("coupang_price", 0))
-        match = pick_matching_candidate(pool, spec, cur_price)
+        goldbox_match = pick_matching_candidate(goldbox_pool, spec, cur_price, allow_deep_promo=True)
 
-        # Goldbox rotates daily; if item rotated off goldbox, try fallback search safely.
-        if match is None and spec["source_type"] == "goldbox":
+        source_match: CoupangCandidate | None = None
+        if str(spec["source_type"]) != "goldbox":
+            pool = get_pool(str(spec["source_type"]), str(spec["source_arg"]))
+            has_tokens = bool([t for t in spec.get("required_tokens", []) if str(t).strip()])
+            source_match = pick_matching_candidate(pool, spec, cur_price, allow_deep_promo=has_tokens)
+        elif goldbox_match is None:
+            # Goldbox rotates daily; if item rotated off goldbox, try fallback search safely.
             fallback_pool = get_pool("search", "廚房濕巾 80抽")
-            match = pick_matching_candidate(fallback_pool, spec, cur_price)
+            source_match = pick_matching_candidate(fallback_pool, spec, cur_price, allow_deep_promo=True)
+
+        in_goldbox = False
+        if goldbox_match is not None and (source_match is None or goldbox_match.price <= source_match.price):
+            match = goldbox_match
+            in_goldbox = True
+        else:
+            match = source_match
 
         if match is None:
             print(f"⏭️  [{slug}] 暫無符合規格與安全價位區間的回傳結果，維持 NT${cur_price}")
@@ -313,7 +340,18 @@ def main() -> int:
         cur_image = str(item.get("image_url") or "").strip()
 
         if match.price != cur_price:
+            dropped = match.price < cur_price
+            drop_pct = ((cur_price - match.price) / cur_price) if cur_price > 0 else 0.0
             print(f"🔄 [{slug}] NT${cur_price} -> NT${match.price} ({match.product_name})")
+            if dropped and (drop_pct >= 0.03 or (cur_price - match.price) >= 15 or in_goldbox):
+                item["previous_price"] = cur_price
+                item["promo_tag"] = promo_label_override or ("Goldbox 限時特賣" if in_goldbox else "限時降價")
+                item["promo_until"] = promo_1d_str if in_goldbox else promo_3d_str
+            elif not dropped:
+                item.pop("previous_price", None)
+                item.pop("promo_tag", None)
+                item.pop("promo_until", None)
+
             item["coupang_price"] = match.price
             if int(item.get("regular_price", 0)) <= match.price:
                 item["regular_price"] = int(round(match.price * 1.2))
@@ -322,6 +360,19 @@ def main() -> int:
             item["updated_at"] = today_str
             item_updated = True
         else:
+            expected_gold_tag = promo_label_override or "Goldbox 限時特賣"
+            if in_goldbox and item.get("promo_tag") != expected_gold_tag:
+                item["promo_tag"] = expected_gold_tag
+                item["promo_until"] = promo_1d_str
+                print(f"🔥 [{slug}] 標記今日 Goldbox 限時特賣 (NT${cur_price})")
+                item_updated = True
+            elif not in_goldbox and item.get("promo_until") and str(item["promo_until"]) < today_str:
+                item.pop("previous_price", None)
+                item.pop("promo_tag", None)
+                item.pop("promo_until", None)
+                print(f"🧹 [{slug}] 清除已逾期活動標籤")
+                item_updated = True
+
             if not cur_image and match.product_image:
                 print(f"🖼️  [{slug}] 補上商品圖片網址")
                 item["image_url"] = match.product_image

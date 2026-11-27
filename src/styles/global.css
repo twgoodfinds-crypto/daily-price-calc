@@ -285,6 +285,12 @@ a {
   font-family: var(--font-mono);
 }
 
+.badge-promo {
+  background: #fff5db;
+  color: #8f4e00;
+  border: 1px solid #e4ba64;
+}
+
 /* Asymmetric Editorial Hero */
 .editorial-hero {
   display: grid;
@@ -500,6 +506,43 @@ a {
 .god-toggle input {
   accent-color: var(--god-text);
   margin: 0;
+}
+
+.promo-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.83rem;
+  font-weight: 700;
+  color: #8f4e00;
+  background: #fff5db;
+  border: 1px solid #e4ba64;
+  padding: 0.42rem 0.72rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  user-select: none;
+}
+
+.promo-toggle input {
+  accent-color: #b56500;
+  margin: 0;
+}
+
+.price-drop-tag {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #8f4e00;
+}
+
+.offer-promo-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #8f4e00;
 }
 
 .control-input,

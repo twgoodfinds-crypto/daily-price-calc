@@ -34,6 +34,9 @@ export interface Product {
   best_for: string;
   editor_note?: string;
   image_url?: string;
+  previous_price?: number;
+  promo_tag?: string;
+  promo_until?: string;
   updated_at: string;
 }
 
@@ -44,6 +47,13 @@ export interface ProductWithMetrics extends Product {
   savingsPercent: number;
   isGodTier: boolean;
   godTierDiff: number;
+  hasActivePromo: boolean;
+  priceDropAmount: number;
+}
+
+function getTaipeiTodayIso(): string {
+  const taipeiNow = new Date(Date.now() + 8 * 60 * 60 * 1000);
+  return taipeiNow.toISOString().slice(0, 10);
 }
 
 export function computeProductMetrics(product: Product): ProductWithMetrics {
@@ -56,6 +66,14 @@ export function computeProductMetrics(product: Product): ProductWithMetrics {
       : 0;
   const isGodTier = unitPrice <= product.god_tier_unit_price;
   const godTierDiff = unitPrice - product.god_tier_unit_price;
+  const todayIso = getTaipeiTodayIso();
+  const hasActivePromo = Boolean(
+    product.promo_tag && (!product.promo_until || product.promo_until >= todayIso),
+  );
+  const priceDropAmount =
+    hasActivePromo && product.previous_price && product.previous_price > product.coupang_price
+      ? product.previous_price - product.coupang_price
+      : 0;
 
   return {
     ...product,
@@ -65,6 +83,8 @@ export function computeProductMetrics(product: Product): ProductWithMetrics {
     savingsPercent,
     isGodTier,
     godTierDiff,
+    hasActivePromo,
+    priceDropAmount,
   };
 }
 

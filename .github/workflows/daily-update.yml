@@ -2,9 +2,14 @@ name: Daily Price Sync
 
 on:
   schedule:
-    # 00:00 UTC = 台灣時間每天早上 08:00
-    - cron: '0 0 * * *'
+    # 台灣時間每天 00:30、08:30、12:30、18:30 自動追蹤降價與 Goldbox 特賣（UTC 16:30, 00:30, 04:30, 10:30）
+    - cron: '30 0,4,10,16 * * *'
   workflow_dispatch:
+    inputs:
+      promo_label:
+        description: '大檔活動標籤（選填，例如：黑五特價、雙12特價；留空則自動判斷）'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -26,6 +31,7 @@ jobs:
         env:
           COUPANG_ACCESS_KEY: ${{ secrets.COUPANG_ACCESS_KEY }}
           COUPANG_SECRET_KEY: ${{ secrets.COUPANG_SECRET_KEY }}
+          COUPANG_PROMO_LABEL: ${{ inputs.promo_label || '' }}
         run: python scripts/update_prices.py
 
       - name: Check for price updates
