@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import AdSlot from '../components/AdSlot.astro';
+import ProductThumb from '../components/ProductThumb.astro';
 import {
   CATEGORIES,
   formatCurrency,
@@ -142,6 +143,14 @@ const pageDescription =
             </span>
           )}
         </div>
+
+        <a
+          href={`/item/${item.slug}`}
+          class="card-thumb-link"
+          aria-label={`查看 ${item.brand} ${item.name} 實算與比價`}
+        >
+          <ProductThumb product={item} variant="card" eager={idx < 6} />
+        </a>
 
         <div class="card-title-group">
           <span class="card-brand">{item.brand}</span>

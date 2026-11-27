@@ -193,6 +193,7 @@ class FeedItem:
     raw_text: str
     product_id: str = ""
     coupang_price: int | None = None
+    image_url: str = ""
 
 
 def parse_feed_json_file(feed_path: Path) -> list[FeedItem]:
@@ -262,12 +263,17 @@ def parse_feed_json_file(feed_path: Path) -> list[FeedItem]:
         if extra_spec:
             raw_lines.append(f"【補充說明】{extra_spec}")
 
+        image_url = str(rec.get("product_image") or rec.get("image_url") or "").strip()
+        if image_url.startswith("//"):
+            image_url = f"https:{image_url}"
+
         feed_items.append(
             FeedItem(
                 entry=UrlEntry(product_url=product_url, affiliate_url=affiliate_url),
                 raw_text="\n".join(raw_lines),
                 product_id=product_id,
                 coupang_price=parsed_price,
+                image_url=image_url,
             )
         )
 
@@ -690,9 +696,12 @@ def upsert_product(
     updated = list(products)
     for idx, existing in enumerate(updated):
         if existing.get("slug") in target_slugs:
-            # 保留原本 slug 避免現有 SEO 連結失效
+            # 保留原本 slug 與既有的商品圖避免 SEO 連結或圖檔遺失
             preserved_slug = existing.get("slug") or new_item["slug"]
-            updated[idx] = {**new_item, "slug": preserved_slug}
+            merged = {**new_item, "slug": preserved_slug}
+            if not merged.get("image_url") and existing.get("image_url"):
+                merged["image_url"] = existing["image_url"]
+            updated[idx] = merged
             return updated, "updated"
 
     updated.append(new_item)
@@ -1013,6 +1022,8 @@ def main() -> int:
             )
             parsed_item, used_model = parsed_result  # type: ignore[misc]
             active_model = used_model
+            if feed_item.image_url:
+                parsed_item["image_url"] = feed_item.image_url
             if feed_item.coupang_price and parsed_item["coupang_price"] != feed_item.coupang_price:
                 parsed_item["coupang_price"] = feed_item.coupang_price
                 if parsed_item["regular_price"] <= parsed_item["coupang_price"]:

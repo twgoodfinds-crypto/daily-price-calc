@@ -30,6 +30,7 @@ class CoupangCandidate:
     product_id: str
     product_name: str
     price: int
+    product_image: str = ""
 
 
 def _configure_stdio_utf8() -> None:
@@ -153,13 +154,23 @@ def extract_candidates(payload: dict[str, Any]) -> list[CoupangCandidate]:
     for raw in rows:
         pid = str(raw.get("productId") or "").strip()
         name = str(raw.get("productName") or "").strip()
+        raw_img = str(raw.get("productImage") or "").strip()
+        if raw_img.startswith("//"):
+            raw_img = f"https:{raw_img}"
         raw_price = raw.get("productPrice")
         try:
             price = int(round(float(raw_price)))
         except (TypeError, ValueError):
             continue
         if pid and name and price > 0:
-            out.append(CoupangCandidate(product_id=pid, product_name=name, price=price))
+            out.append(
+                CoupangCandidate(
+                    product_id=pid,
+                    product_name=name,
+                    price=price,
+                    product_image=raw_img,
+                )
+            )
     return out
 
 
@@ -172,15 +183,21 @@ def fetch_source_pool(
 ) -> list[CoupangCandidate]:
     if source_type == "bestcategories":
         path = f"/v2/providers/affiliate_open_api/apis/openapi/v1/products/bestcategories/{source_arg}"
-        payload = coupang_get_json(domain, path, {"limit": 100}, access_key, secret_key)
+        payload = coupang_get_json(domain, path, {"limit": 100, "imageSize": "512x512"}, access_key, secret_key)
         return extract_candidates(payload)
     if source_type == "goldbox":
         path = "/v2/providers/affiliate_open_api/apis/openapi/v1/products/goldbox"
-        payload = coupang_get_json(domain, path, {}, access_key, secret_key)
+        payload = coupang_get_json(domain, path, {"imageSize": "512x512"}, access_key, secret_key)
         return extract_candidates(payload)
     if source_type == "search":
         path = "/v2/providers/affiliate_open_api/apis/openapi/v1/products/search"
-        payload = coupang_get_json(domain, path, {"keyword": source_arg, "limit": 10}, access_key, secret_key)
+        payload = coupang_get_json(
+            domain,
+            path,
+            {"keyword": source_arg, "limit": 10, "imageSize": "512x512"},
+            access_key,
+            secret_key,
+        )
         return extract_candidates(payload)
     raise ValueError(f"Unsupported source_type: {source_type}")
 
@@ -227,6 +244,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
         "--touch-date",
         action="store_true",
         help="即使價格無變動，也為成功比對到的商品刷新 updated_at 日期",
+    )
+    parser.add_argument(
+        "--refresh-images",
+        action="store_true",
+        help="一併將所有比對到的商品 image_url 同步成 API 最新回傳的圖片網址",
     )
     return parser
 
@@ -287,18 +309,35 @@ def main() -> int:
             continue
 
         matched_count += 1
+        item_updated = False
+        cur_image = str(item.get("image_url") or "").strip()
+
         if match.price != cur_price:
             print(f"🔄 [{slug}] NT${cur_price} -> NT${match.price} ({match.product_name})")
             item["coupang_price"] = match.price
             if int(item.get("regular_price", 0)) <= match.price:
                 item["regular_price"] = int(round(match.price * 1.2))
+            if match.product_image:
+                item["image_url"] = match.product_image
             item["updated_at"] = today_str
-            changed_count += 1
-        elif args.touch_date and item.get("updated_at") != today_str:
-            item["updated_at"] = today_str
-            changed_count += 1
+            item_updated = True
         else:
-            print(f"✅ [{slug}] 價格維持 NT${cur_price}")
+            if not cur_image and match.product_image:
+                print(f"🖼️  [{slug}] 補上商品圖片網址")
+                item["image_url"] = match.product_image
+                item_updated = True
+            elif args.refresh_images and match.product_image and match.product_image != cur_image:
+                print(f"🖼️  [{slug}] 同步更新商品圖片網址")
+                item["image_url"] = match.product_image
+                item_updated = True
+            if args.touch_date and item.get("updated_at") != today_str:
+                item["updated_at"] = today_str
+                item_updated = True
+            if not item_updated:
+                print(f"✅ [{slug}] 價格維持 NT${cur_price}")
+
+        if item_updated:
+            changed_count += 1
 
     print(
         f"\n📊 查價完成：成功核對 {matched_count}/{len(products)} 筆 | "

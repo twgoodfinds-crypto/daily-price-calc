@@ -33,6 +33,7 @@ export interface Product {
   features: string[];
   best_for: string;
   editor_note?: string;
+  image_url?: string;
   updated_at: string;
 }
 

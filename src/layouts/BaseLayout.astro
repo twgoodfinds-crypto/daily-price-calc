@@ -10,6 +10,7 @@ interface Props {
   description: string;
   canonicalPath?: string;
   ogType?: 'website' | 'article';
+  ogImage?: string;
 }
 
 const {
@@ -17,6 +18,7 @@ const {
   description,
   canonicalPath = Astro.url.pathname,
   ogType = 'website',
+  ogImage,
 } = Astro.props;
 
 const activeCounts = new Map<string, number>();
@@ -63,9 +65,11 @@ const analyticsConfig = getAnalyticsConfig();
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalURL} />
-    <meta name="twitter:card" content="summary" />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
+    {ogImage && <meta name="twitter:image" content={ogImage} />}
     {shouldLoadAdsenseScript && (
       <script
         async

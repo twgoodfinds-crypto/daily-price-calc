@@ -10,6 +10,7 @@ export function getStaticPaths() {
 
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AdSlot from '../../components/AdSlot.astro';
+import ProductThumb from '../../components/ProductThumb.astro';
 import {
   buildProductFaqs,
   formatCurrency,
@@ -67,6 +68,7 @@ const safeFaqJsonLd = sanitizeJsonLd(faqJsonLd);
   description={seoDescription}
   canonicalPath={`/item/${product.slug}`}
   ogType="article"
+  ogImage={product.image_url}
 >
   <script slot="head" type="application/ld+json" set:html={safeFaqJsonLd} />
 
@@ -81,7 +83,7 @@ const safeFaqJsonLd = sanitizeJsonLd(faqJsonLd);
   <!-- 首屏結論區 -->
   <section class="section-card" aria-labelledby="verdict-heading">
     <div class="verdict-layout">
-      <div>
+      <div class="verdict-head">
         <div class="item-badges">
           <span class="badge badge-category">{product.category}</span>
           <span class="badge badge-category">{product.brand}</span>
@@ -95,7 +97,9 @@ const safeFaqJsonLd = sanitizeJsonLd(faqJsonLd);
         </div>
 
         <h1 id="verdict-heading" class="item-h1">{seoTitle}</h1>
+      </div>
 
+      <div class="verdict-body">
         <div class="verdict-metrics">
           <div class={`metric-box ${product.isGodTier ? 'is-god' : 'is-highlight'}`}>
             <div class="metric-title">酷澎目前折算單價</div>
@@ -149,59 +153,68 @@ const safeFaqJsonLd = sanitizeJsonLd(faqJsonLd);
         )}
       </div>
 
-      <aside class="offer-sidebar" aria-label="購買與規格摘要">
-        <div class="sidebar-ledger-kicker">COUPANG OFFER SLIP</div>
-        <div class="offer-price-head">
-          <span>酷澎實算賣場價</span>
-          <span class="badge badge-save tabular-nums">較市價 -{savingsPercentFormatted}%</span>
-        </div>
-        <div class="offer-price-now tabular-nums">
-          NT$ {formatCurrency(product.coupang_price)}
+      <aside class="offer-column" aria-label="商品外觀與購買摘要">
+        <div class="detail-photo-frame">
+          <ProductThumb product={product} variant="detail" eager={true} />
+          <p class="detail-photo-caption">
+            商品實拍參考 · 實際包裝與組數請以酷澎頁顯為準
+          </p>
         </div>
 
-        <ul class="offer-meta-list tabular-nums">
-          <li>
-            <span>包裝規格</span>
-            <strong>
-              {product.pack_count > 1
-                ? `${product.pack_count} 組 × ${product.units_per_pack} ${product.unit_name}`
-                : `單件裝（${formatCurrency(product.units_per_pack)} ${product.unit_name}）`}
-            </strong>
-          </li>
-          <li>
-            <span>整箱總數</span>
-            <strong>{formatCurrency(product.total_units)} {product.unit_name}</strong>
-          </li>
-          <li>
-            <span>一般通路原價</span>
-            <span class="regular-price-strike">NT$ {formatCurrency(product.regular_price)}</span>
-          </li>
-          <li>
-            <span>價格快照日期</span>
-            <span>{product.updated_at}</span>
-          </li>
-        </ul>
+        <div class="offer-sidebar">
+          <div class="sidebar-ledger-kicker">COUPANG OFFER SLIP</div>
+          <div class="offer-price-head">
+            <span>酷澎實算賣場價</span>
+            <span class="badge badge-save tabular-nums">較市價 -{savingsPercentFormatted}%</span>
+          </div>
+          <div class="offer-price-now tabular-nums">
+            NT$ {formatCurrency(product.coupang_price)}
+          </div>
 
-        <a
-          href={product.coupang_affiliate_url}
-          target="_blank"
-          rel="nofollow sponsored noopener noreferrer"
-          class="btn btn-cta cta-large"
-          data-track-affiliate
-          data-placement="item_sidebar"
-          data-item-slug={product.slug}
-          data-item-name={`${product.brand} ${product.name}`}
-          data-item-category={product.category}
-          data-item-price={product.coupang_price}
-          data-item-unit-price={unitPriceFormatted}
-          data-item-god-tier={product.isGodTier ? 'true' : 'false'}
-        >
-          去酷澎看最新售價 →
-        </a>
+          <ul class="offer-meta-list tabular-nums">
+            <li>
+              <span>包裝規格</span>
+              <strong>
+                {product.pack_count > 1
+                  ? `${product.pack_count} 組 × ${product.units_per_pack} ${product.unit_name}`
+                  : `單件裝（${formatCurrency(product.units_per_pack)} ${product.unit_name}）`}
+              </strong>
+            </li>
+            <li>
+              <span>整箱總數</span>
+              <strong>{formatCurrency(product.total_units)} {product.unit_name}</strong>
+            </li>
+            <li>
+              <span>一般通路原價</span>
+              <span class="regular-price-strike">NT$ {formatCurrency(product.regular_price)}</span>
+            </li>
+            <li>
+              <span>價格快照日期</span>
+              <span>{product.updated_at}</span>
+            </li>
+          </ul>
 
-        <p class="offer-note">
-          小提醒：賣場價格跟折價券常浮動，點過去先確認賣場選單裡的實際包數／瓶數，再拿下面計算機對一次最保險。
-        </p>
+          <a
+            href={product.coupang_affiliate_url}
+            target="_blank"
+            rel="nofollow sponsored noopener noreferrer"
+            class="btn btn-cta cta-large"
+            data-track-affiliate
+            data-placement="item_sidebar"
+            data-item-slug={product.slug}
+            data-item-name={`${product.brand} ${product.name}`}
+            data-item-category={product.category}
+            data-item-price={product.coupang_price}
+            data-item-unit-price={unitPriceFormatted}
+            data-item-god-tier={product.isGodTier ? 'true' : 'false'}
+          >
+            去酷澎看最新售價 →
+          </a>
+
+          <p class="offer-note">
+            小提醒：賣場價格跟折價券常浮動，點過去先確認賣場選單裡的實際包數／瓶數，再拿下面計算機對一次最保險。
+          </p>
+        </div>
       </aside>
     </div>
   </section>
@@ -338,14 +351,26 @@ const safeFaqJsonLd = sanitizeJsonLd(faqJsonLd);
                   )}
                 </td>
                 <td>
-                  <a href={`/item/${peer.slug}`}>
-                    {peer.brand} {peer.name}
-                  </a>
-                  {isCurrent && (
+                  <div class="compare-peer-cell">
+                    <a
+                      href={`/item/${peer.slug}`}
+                      class="compare-peer-thumb-link"
+                      aria-hidden="true"
+                      tabindex="-1"
+                    >
+                      <ProductThumb product={peer} variant="mini" />
+                    </a>
                     <div>
-                      <span class="badge badge-category">目前瀏覽</span>
+                      <a href={`/item/${peer.slug}`}>
+                        {peer.brand} {peer.name}
+                      </a>
+                      {isCurrent && (
+                        <div>
+                          <span class="badge badge-category">目前瀏覽</span>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </td>
                 <td class="tabular-nums">
                   {formatCurrency(peer.total_units)} {peer.unit_name}

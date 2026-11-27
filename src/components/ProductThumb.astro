@@ -1,0 +1,41 @@
+---
+import { formatCurrency, type ProductWithMetrics } from '../lib/pricing';
+
+interface Props {
+  product: ProductWithMetrics;
+  variant?: 'card' | 'detail' | 'mini';
+  eager?: boolean;
+}
+
+const { product, variant = 'card', eager = false } = Astro.props;
+const imageUrl = (product.image_url || '').trim();
+const packText =
+  product.pack_count > 1
+    ? `${product.pack_count}組×${product.units_per_pack}${product.unit_name}`
+    : `${formatCurrency(product.total_units)}${product.unit_name}`;
+---
+
+<div class={`thumb-stage thumb-stage--${variant} ${imageUrl ? '' : 'is-img-fallback'}`}>
+  {imageUrl && (
+    <img
+      src={imageUrl}
+      alt={`${product.brand} ${product.name}`}
+      class="thumb-img"
+      loading={eager ? 'eager' : 'lazy'}
+      decoding="async"
+      referrerpolicy="no-referrer"
+      onerror="this.closest('.thumb-stage')?.classList.add('is-img-fallback'); this.remove();"
+    />
+  )}
+  <div class="thumb-fallback" aria-hidden="true">
+    {variant === 'mini' ? (
+      <span class="thumb-mini-mark">{product.category.slice(0, 1)}</span>
+    ) : (
+      <>
+        <span class="thumb-fallback-cat">{product.category}</span>
+        <strong class="thumb-fallback-brand">{product.brand}</strong>
+        <span class="thumb-fallback-spec tabular-nums">{packText}</span>
+      </>
+    )}
+  </div>
+</div>
