@@ -214,5 +214,158 @@
     "required_tokens": ["80抽", "20包"],
     "min_price": 250,
     "max_price": 600
+  },
+  {
+    "slug": "kleenex-supreme-100-72",
+    "product_id": "483829965832195",
+    "source_type": "search",
+    "source_arg": "舒潔 棉柔舒適抽取衛生紙",
+    "required_tokens": ["棉柔舒適"],
+    "min_price": 700,
+    "max_price": 1250
+  },
+  {
+    "slug": "kleenex-cloud-soft-100-60",
+    "product_id": "692227302883387",
+    "source_type": "search",
+    "source_arg": "舒潔 棉柔舒適抽取衛生紙",
+    "required_tokens": ["雲柔舒適"],
+    "min_price": 600,
+    "max_price": 1100
+  },
+  {
+    "slug": "mayflower-fresh-100-60",
+    "product_id": "257644551979008",
+    "source_type": "search",
+    "source_arg": "五月花 新柔韌",
+    "required_tokens": ["新柔韌"],
+    "min_price": 500,
+    "max_price": 950
+  },
+  {
+    "slug": "mayflower-thick-bar-90-60",
+    "product_id": "257643021025281",
+    "source_type": "search",
+    "source_arg": "五月花 厚棒",
+    "required_tokens": ["厚棒", "90張"],
+    "min_price": 800,
+    "max_price": 1500
+  },
+  {
+    "slug": "andante-ultra-soft-110-64",
+    "product_id": "468981055963152",
+    "source_type": "search",
+    "source_arg": "春風 超細柔抽取式衛生紙",
+    "required_tokens": ["110張"],
+    "min_price": 600,
+    "max_price": 1100
+  },
+  {
+    "slug": "bailan-4x-pods-anti-mite-30-2",
+    "product_id": "265629730816010",
+    "source_type": "search",
+    "source_arg": "白蘭 洗衣球",
+    "required_tokens": ["抗菌防螨"],
+    "min_price": 190,
+    "max_price": 400
+  },
+  {
+    "slug": "orange-house-pods-22-6",
+    "product_id": "454175980732416",
+    "source_type": "search",
+    "source_arg": "橘子工坊 洗衣膠囊",
+    "required_tokens": ["洗衣膠囊"],
+    "min_price": 650,
+    "max_price": 850
+  },
+  {
+    "slug": "bailan-fragrance-pods-rose-23",
+    "product_id": "719041983184904",
+    "source_type": "search",
+    "source_arg": "白蘭 洗衣球",
+    "required_tokens": ["23顆", "玫瑰"],
+    "min_price": 100,
+    "max_price": 240
+  },
+  {
+    "slug": "knh-hiwater-wipes-80-12",
+    "product_id": "355211579162625",
+    "source_type": "bestcategories",
+    "source_arg": "1003",
+    "required_tokens": ["80張", "12包"],
+    "min_price": 220,
+    "max_price": 500
+  },
+  {
+    "slug": "laisen-waterdrop-wipes-90-6",
+    "product_id": "214180774756359",
+    "source_type": "bestcategories",
+    "source_arg": "1003",
+    "required_tokens": ["90張", "6包"],
+    "min_price": 100,
+    "max_price": 240
+  },
+  {
+    "slug": "goon-light-pants-l-184",
+    "product_id": "580169869803522",
+    "source_type": "bestcategories",
+    "source_arg": "1003",
+    "required_tokens": ["L", "184片"],
+    "min_price": 850,
+    "max_price": 1650
+  },
+  {
+    "slug": "pampers-ichiban-tape-nb-s-144",
+    "product_id": "720145345265710",
+    "source_type": "search",
+    "source_arg": "一級幫 紙尿褲",
+    "required_tokens": ["NB 32片", "S 112片"],
+    "min_price": 650,
+    "max_price": 1250
+  },
+  {
+    "slug": "pampers-ichiban-tape-s-m-186",
+    "product_id": "720398454734867",
+    "source_type": "search",
+    "source_arg": "一級幫 紙尿褲",
+    "required_tokens": ["S 132片", "M 54片"],
+    "min_price": 950,
+    "max_price": 1850
+  },
+  {
+    "slug": "bailan-detergent-mite-1600g-3",
+    "product_id": "258840020877314",
+    "source_type": "search",
+    "source_arg": "白蘭 洗衣精 補充包",
+    "required_tokens": ["除蟎"],
+    "min_price": 140,
+    "max_price": 320
+  },
+  {
+    "slug": "orange-house-detergent-no-fragrance-1500ml-2",
+    "product_id": "628472531419181",
+    "source_type": "search",
+    "source_arg": "橘子工坊 洗衣精 補充包",
+    "required_tokens": ["無香精"],
+    "min_price": 240,
+    "max_price": 420
+  },
+  {
+    "slug": "andante-kitchen-towel-120-12",
+    "product_id": "263882685792259",
+    "source_type": "bestcategories",
+    "source_arg": "1005",
+    "required_tokens": ["120張", "6捲", "2袋"],
+    "min_price": 140,
+    "max_price": 320
+  },
+  {
+    "slug": "scotch-brite-sponge-5-2",
+    "product_id": "460238100594688",
+    "source_type": "bestcategories",
+    "source_arg": "1005",
+    "required_tokens": ["細緻餐具", "5片", "2包"],
+    "min_price": 100,
+    "max_price": 240
   }
 ]
