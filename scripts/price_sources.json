@@ -1,0 +1,218 @@
+[
+  {
+    "slug": "mit-simple-tissue-150-72",
+    "product_id": "529086162042880",
+    "source_type": "search",
+    "source_arg": "衛生紙 72包",
+    "required_tokens": ["150抽"],
+    "min_price": 500,
+    "max_price": 1000
+  },
+  {
+    "slug": "peijieya-tissue-150-56",
+    "product_id": "271775598329862",
+    "source_type": "search",
+    "source_arg": "倍潔雅 150抽",
+    "required_tokens": ["150抽"],
+    "min_price": 450,
+    "max_price": 850
+  },
+  {
+    "slug": "uho-smart-tissue-100-96",
+    "product_id": "742929274290224",
+    "source_type": "search",
+    "source_arg": "優活 100抽 96包",
+    "required_tokens": ["100抽", "96包"],
+    "min_price": 600,
+    "max_price": 1250
+  },
+  {
+    "slug": "abixinqing-tissue-90-48",
+    "product_id": "650577964826669",
+    "source_type": "search",
+    "source_arg": "阿比心情 衛生紙",
+    "required_tokens": ["90抽", "48包"],
+    "min_price": 350,
+    "max_price": 720
+  },
+  {
+    "slug": "ariel-jp-4d-indoor-84",
+    "product_id": "684604834824265",
+    "source_type": "search",
+    "source_arg": "ARIEL 室內晾衣洗衣球",
+    "required_tokens": ["室內晾衣"],
+    "min_price": 320,
+    "max_price": 650
+  },
+  {
+    "slug": "ariel-4d-stain-refill-73",
+    "product_id": "559863839031296",
+    "source_type": "search",
+    "source_arg": "ARIEL 4D 抗菌去漬",
+    "required_tokens": ["抗菌去漬"],
+    "min_price": 340,
+    "max_price": 680
+  },
+  {
+    "slug": "ariel-4d-indoor-refill-73",
+    "product_id": "724389280464905",
+    "source_type": "search",
+    "source_arg": "ARIEL 4D 室內晾衣",
+    "required_tokens": ["室內晾衣"],
+    "min_price": 340,
+    "max_price": 680
+  },
+  {
+    "slug": "cleansea-enzyme-pods-30",
+    "product_id": "704460338511916",
+    "source_type": "search",
+    "source_arg": "清淨海 洗衣膠囊 30顆",
+    "required_tokens": ["30顆"],
+    "min_price": 130,
+    "max_price": 310
+  },
+  {
+    "slug": "joyful-napkin-wipes-80-20",
+    "product_id": "473698431647752",
+    "source_type": "bestcategories",
+    "source_arg": "1003",
+    "required_tokens": ["80張", "20包"],
+    "min_price": 180,
+    "max_price": 450
+  },
+  {
+    "slug": "comet-baby-wipes-cap-100-20",
+    "product_id": "189244999974912",
+    "source_type": "bestcategories",
+    "source_arg": "1003",
+    "required_tokens": ["100張", "20包"],
+    "min_price": 320,
+    "max_price": 780
+  },
+  {
+    "slug": "huggies-pure-wipes-100-18",
+    "product_id": "212354335752194",
+    "source_type": "bestcategories",
+    "source_arg": "1003",
+    "required_tokens": ["100張", "18包"],
+    "min_price": 400,
+    "max_price": 950
+  },
+  {
+    "slug": "huggies-thick-wipes-80-18",
+    "product_id": "277931439915012",
+    "source_type": "bestcategories",
+    "source_arg": "1003",
+    "required_tokens": ["80張", "18包"],
+    "min_price": 380,
+    "max_price": 900
+  },
+  {
+    "slug": "merries-goodskin-tape-l-208",
+    "product_id": "226846838849542",
+    "source_type": "bestcategories",
+    "source_arg": "1003",
+    "required_tokens": ["L", "208片"],
+    "min_price": 800,
+    "max_price": 1800
+  },
+  {
+    "slug": "pampers-fresh-pants-l-168",
+    "product_id": "435649266040833",
+    "source_type": "bestcategories",
+    "source_arg": "1003",
+    "required_tokens": ["L", "168片"],
+    "min_price": 800,
+    "max_price": 1750
+  },
+  {
+    "slug": "pampers-jp-tape-l-138",
+    "product_id": "351866848264193",
+    "source_type": "bestcategories",
+    "source_arg": "1003",
+    "required_tokens": ["L", "138片"],
+    "min_price": 700,
+    "max_price": 1600
+  },
+  {
+    "slug": "huggies-forest-pants-l-168",
+    "product_id": "664098756640793",
+    "source_type": "bestcategories",
+    "source_arg": "1003",
+    "required_tokens": ["168片", "L"],
+    "min_price": 850,
+    "max_price": 1850
+  },
+  {
+    "slug": "magic-amah-antibacterial-detergent-4000g-4",
+    "product_id": "301212377235459",
+    "source_type": "search",
+    "source_arg": "妙管家 抗菌 濃縮洗衣精",
+    "required_tokens": ["抗菌"],
+    "min_price": 260,
+    "max_price": 540
+  },
+  {
+    "slug": "magic-clean-handwash-rose-3785ml",
+    "product_id": "168942127513600",
+    "source_type": "bestcategories",
+    "source_arg": "1002",
+    "required_tokens": ["3785ml", "1桶"],
+    "min_price": 200,
+    "max_price": 550
+  },
+  {
+    "slug": "magic-clean-handwash-foam-3785ml",
+    "product_id": "542834222415873",
+    "source_type": "bestcategories",
+    "source_arg": "1002",
+    "required_tokens": ["3785ml", "1桶"],
+    "min_price": 220,
+    "max_price": 600
+  },
+  {
+    "slug": "lion-kireikirei-foam-refill-800ml-2",
+    "product_id": "263881683320833",
+    "source_type": "bestcategories",
+    "source_arg": "1002",
+    "required_tokens": ["800ml", "2瓶"],
+    "min_price": 180,
+    "max_price": 480
+  },
+  {
+    "slug": "soft-golden-kitchen-towel-120-48",
+    "product_id": "156217771016200",
+    "source_type": "bestcategories",
+    "source_arg": "1005",
+    "required_tokens": ["120張", "6捲", "8袋"],
+    "min_price": 350,
+    "max_price": 850
+  },
+  {
+    "slug": "delight-jindeyi-kitchen-towel-112-24",
+    "product_id": "279082860265479",
+    "source_type": "bestcategories",
+    "source_arg": "1005",
+    "required_tokens": ["112張", "6捲", "4袋"],
+    "min_price": 240,
+    "max_price": 580
+  },
+  {
+    "slug": "kleenex-viva-kitchen-towel-108-36",
+    "product_id": "212787494092807",
+    "source_type": "bestcategories",
+    "source_arg": "1005",
+    "required_tokens": ["108張", "6捲", "6袋"],
+    "min_price": 380,
+    "max_price": 900
+  },
+  {
+    "slug": "kitchen-wet-wipes-80-20",
+    "product_id": "506232167104526",
+    "source_type": "goldbox",
+    "source_arg": "goldbox",
+    "required_tokens": ["80抽", "20包"],
+    "min_price": 250,
+    "max_price": 600
+  }
+]

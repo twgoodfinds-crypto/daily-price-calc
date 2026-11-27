@@ -1,0 +1,398 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AdSlot from '../components/AdSlot.astro';
+import {
+  CATEGORIES,
+  formatCurrency,
+  formatPercent,
+  formatUnitPrice,
+  getAllProductsWithMetrics,
+} from '../lib/pricing';
+
+const products = getAllProductsWithMetrics();
+const godTierCount = products.filter((item) => item.isGodTier).length;
+const maxDiscount = Math.max(...products.map((item) => item.savingsPercent));
+
+const categoryCounts = new Map<string, number>();
+for (const cat of CATEGORIES) {
+  categoryCounts.set(cat, products.filter((item) => item.category === cat).length);
+}
+
+const CORE_CATEGORIES = ['衛生紙', '洗衣膠囊', '濕紙巾', '紙尿褲'] as const;
+const visibleCategories = CATEGORIES.filter(
+  (cat) => CORE_CATEGORIES.includes(cat as (typeof CORE_CATEGORIES)[number]) || (categoryCounts.get(cat) ?? 0) > 0,
+);
+
+const pageTitle = '日用品單抽／單顆真實單價試算｜酷澎箱購比價筆記';
+const pageDescription =
+  '別只看整箱總價！直接幫你把衛生紙、洗衣膠囊、濕紙巾、紙尿褲、清潔洗劑與廚房紙巾拆成每抽、每顆、每片與每毫升單價，對照台灣常見囤貨門檻，買前算一下就不怕買貴。';
+---
+
+<BaseLayout title={pageTitle} description={pageDescription} canonicalPath="/">
+  <section class="editorial-hero">
+    <div class="hero-main">
+      <div class="hero-kicker-row">
+        <span class="hero-eyebrow">酷澎箱購實算價目誌</span>
+        <span class="hero-edition tabular-nums">TW HOUSEHOLD EDITION</span>
+      </div>
+      <h1 class="hero-title">別只看整箱總價，<br class="hero-br" />先算過單抽單顆再下單</h1>
+      <p class="hero-subtitle">
+        賣場總愛寫「箱購特價」，但沒除以總張數跟容量根本看不出貴還是便宜。這裡直接把酷澎整箱日用品拆算成每抽、每顆、每片與每毫升實價，對照台灣省錢社群常蹲的好價基準線。
+      </p>
+    </div>
+
+    <aside class="hero-ledger" aria-label="站內統計摘要">
+      <div class="ledger-head">
+        <span>PRICE INDEX SUMMARY</span>
+        <span>每日換算</span>
+      </div>
+      <div class="ledger-rows">
+        <div class="ledger-row">
+          <span class="ledger-label">收錄實算品項</span>
+          <strong class="ledger-val tabular-nums">{products.length} 項</strong>
+        </div>
+        <div class="ledger-row">
+          <span class="ledger-label">已壓過神價門檻</span>
+          <strong class="ledger-val is-god tabular-nums">{godTierCount} 項</strong>
+        </div>
+        <div class="ledger-row">
+          <span class="ledger-label">最高帳面價差</span>
+          <strong class="ledger-val is-save tabular-nums">{formatPercent(maxDiscount)}%</strong>
+        </div>
+      </div>
+      <p class="ledger-foot">點進任一品項頁，皆附「別網比價計算機」可直接輸入全聯／momo 價格換算。</p>
+    </aside>
+  </section>
+
+  <section class="toolbar" aria-label="商品篩選與排序">
+    <div class="filter-pills" role="group" aria-label="依商品分類篩選">
+      <button
+        type="button"
+        class="filter-btn is-active"
+        data-filter-category="全部"
+        aria-pressed="true"
+      >
+        <span>全部</span>
+        <span class="filter-count tabular-nums">{products.length}</span>
+      </button>
+      {visibleCategories.map((category) => (
+        <button
+          type="button"
+          class="filter-btn"
+          data-filter-category={category}
+          aria-pressed="false"
+        >
+          <span>{category}</span>
+          <span class="filter-count tabular-nums">{categoryCounts.get(category) ?? 0}</span>
+        </button>
+      ))}
+    </div>
+
+    <div class="toolbar-controls">
+      <label class="god-toggle">
+        <input type="checkbox" id="god-tier-only" />
+        <span>只看達神價門檻</span>
+      </label>
+
+      <input
+        type="search"
+        id="keyword-search"
+        class="control-input"
+        placeholder="搜尋品牌或關鍵字..."
+        aria-label="搜尋品牌或商品關鍵字"
+      />
+
+      <select id="sort-select" class="control-select" aria-label="排序方式">
+        <option value="default">預設順序</option>
+        <option value="unit-asc">單價：由低到高</option>
+        <option value="discount-desc">價差幅度：由高到低</option>
+        <option value="god-first">達神價優先</option>
+      </select>
+    </div>
+  </section>
+
+  <div class="results-meta">
+    <span id="visible-count-text" class="tabular-nums">
+      顯示 <strong id="visible-count-num">{products.length}</strong> / {products.length} 項商品
+    </span>
+    <span>單價均以酷澎頁顯金額除以總單位數計算</span>
+  </div>
+
+  <section id="product-grid" class="product-grid" aria-label="箱購日用品單價清單">
+    {products.map((item, idx) => (
+      <article
+        class={`product-card ${item.isGodTier ? 'is-god-tier' : ''}`}
+        data-index={idx}
+        data-category={item.category}
+        data-god-tier={item.isGodTier ? 'true' : 'false'}
+        data-unit-price={item.unitPrice}
+        data-discount={item.savingsPercent}
+        data-search={`${item.brand} ${item.name} ${item.category}`.toLowerCase()}
+      >
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="card-seq tabular-nums">No.{String(idx + 1).padStart(2, '0')}</span>
+            <span class="badge badge-category">{item.category}</span>
+          </div>
+          {item.isGodTier ? (
+            <span class="badge badge-god">達神價門檻</span>
+          ) : (
+            <span class="badge badge-neutral tabular-nums">
+              +{formatUnitPrice(item.godTierDiff)}/{item.unit_name}
+            </span>
+          )}
+        </div>
+
+        <div class="card-title-group">
+          <span class="card-brand">{item.brand}</span>
+          <h2 class="card-title">
+            <a href={`/item/${item.slug}`}>{item.name}</a>
+          </h2>
+        </div>
+
+        <p class="card-spec tabular-nums">
+          {item.pack_count > 1 ? (
+            <>
+              {item.pack_count} 組 × {item.units_per_pack} {item.unit_name} · 共{' '}
+              {formatCurrency(item.total_units)} {item.unit_name}
+            </>
+          ) : (
+            <>
+              單件裝 · 共 {formatCurrency(item.total_units)} {item.unit_name}
+            </>
+          )}
+        </p>
+
+        <div class="unit-price-panel">
+          <div class="unit-price-top">
+            <span class="unit-price-label">每{item.unit_name}折算單價</span>
+            <div class="unit-price-main tabular-nums">
+              <span class="unit-price-currency">NT$</span>
+              <span class="unit-price-value">{formatUnitPrice(item.unitPrice)}</span>
+              <span class="unit-price-unit">/{item.unit_name}</span>
+            </div>
+          </div>
+          <div class="threshold-inline tabular-nums">
+            <span>門檻基準 ≤ NT$ {formatUnitPrice(item.god_tier_unit_price)}/{item.unit_name}</span>
+            <span class={item.isGodTier ? 'delta-pass' : 'delta-over'}>
+              {item.isGodTier ? '✓ 低於門檻' : '略高於門檻'}
+            </span>
+          </div>
+        </div>
+
+        <div class="price-row tabular-nums">
+          <div class="coupang-price-line">
+            <span class="coupang-tag">酷澎現價</span>
+            <strong>NT$ {formatCurrency(item.coupang_price)}</strong>
+            <span class="regular-price-strike">NT$ {formatCurrency(item.regular_price)}</span>
+          </div>
+          <span class="badge badge-save">-{formatPercent(item.savingsPercent)}%</span>
+        </div>
+
+        <div class="card-actions">
+          <a href={`/item/${item.slug}`} class="btn btn-secondary">
+            詳細試算 & 比價
+          </a>
+          <a
+            href={item.coupang_affiliate_url}
+            target="_blank"
+            rel="nofollow sponsored noopener noreferrer"
+            class="btn btn-cta"
+            data-track-affiliate
+            data-placement="home_card"
+            data-item-slug={item.slug}
+            data-item-name={`${item.brand} ${item.name}`}
+            data-item-category={item.category}
+            data-item-price={item.coupang_price}
+            data-item-unit-price={formatUnitPrice(item.unitPrice)}
+            data-item-god-tier={item.isGodTier ? 'true' : 'false'}
+          >
+            酷澎賣場 →
+          </a>
+        </div>
+      </article>
+    ))}
+  </section>
+
+  <div id="empty-state" class="empty-state" hidden>
+    <p>找不到符合條件的品項，試試關掉「只看達神價門檻」或清空關鍵字。</p>
+    <button type="button" id="reset-filters-btn" class="btn btn-primary">
+      重設所有篩選條件
+    </button>
+  </div>
+
+  <AdSlot slotKey="home-feed" />
+</BaseLayout>
+
+<script>
+  const filterButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-filter-category]'));
+  const godTierCheckbox = document.getElementById('god-tier-only');
+  const keywordInput = document.getElementById('keyword-search');
+  const sortSelect = document.getElementById('sort-select');
+  const grid = document.getElementById('product-grid');
+  const cards = Array.from(document.querySelectorAll<HTMLElement>('.product-card'));
+  const visibleCountText = document.getElementById('visible-count-text');
+  const visibleCountNum = document.getElementById('visible-count-num');
+  const emptyState = document.getElementById('empty-state');
+  const resetBtn = document.getElementById('reset-filters-btn');
+
+  let activeCategory = '全部';
+
+  const params = new URLSearchParams(window.location.search);
+  const queryCategory = params.get('category');
+  if (
+    queryCategory &&
+    filterButtons.some((btn) => btn.getAttribute('data-filter-category') === queryCategory)
+  ) {
+    activeCategory = queryCategory;
+  }
+
+  function syncCategoryButtons() {
+    filterButtons.forEach((btn) => {
+      const cat = btn.getAttribute('data-filter-category');
+      const isMatch = cat === activeCategory;
+      btn.classList.toggle('is-active', isMatch);
+      btn.setAttribute('aria-pressed', isMatch ? 'true' : 'false');
+    });
+  }
+
+  function applyFiltersAndSort() {
+    const onlyGodTier = godTierCheckbox instanceof HTMLInputElement && godTierCheckbox.checked;
+    const keyword =
+      keywordInput instanceof HTMLInputElement ? keywordInput.value.trim().toLowerCase() : '';
+    const sortMode = sortSelect instanceof HTMLSelectElement ? sortSelect.value : 'default';
+
+    const sortedCards = [...cards].sort((a, b) => {
+      if (sortMode === 'unit-asc') {
+        return Number(a.dataset.unitPrice) - Number(b.dataset.unitPrice);
+      }
+      if (sortMode === 'discount-desc') {
+        return Number(b.dataset.discount) - Number(a.dataset.discount);
+      }
+      if (sortMode === 'god-first') {
+        const aGod = a.dataset.godTier === 'true' ? 0 : 1;
+        const bGod = b.dataset.godTier === 'true' ? 0 : 1;
+        if (aGod !== bGod) return aGod - bGod;
+        return Number(a.dataset.unitPrice) - Number(b.dataset.unitPrice);
+      }
+      return Number(a.dataset.index) - Number(b.dataset.index);
+    });
+
+    let visibleCount = 0;
+
+    sortedCards.forEach((card) => {
+      const cardCat = card.dataset.category || '';
+      const isGod = card.dataset.godTier === 'true';
+      const searchCorpus = card.dataset.search || '';
+
+      const matchesCategory = activeCategory === '全部' || cardCat === activeCategory;
+      const matchesGod = !onlyGodTier || isGod;
+      const matchesKeyword = !keyword || searchCorpus.includes(keyword);
+
+      const isVisible = matchesCategory && matchesGod && matchesKeyword;
+      card.hidden = !isVisible;
+      card.classList.toggle('is-filtered-out', !isVisible);
+      if (isVisible) visibleCount += 1;
+      if (grid) grid.appendChild(card);
+    });
+
+    if (visibleCountNum) {
+      visibleCountNum.textContent = String(visibleCount);
+    } else if (visibleCountText) {
+      visibleCountText.textContent = `顯示 ${visibleCount} / ${cards.length} 項商品`;
+    }
+    if (emptyState) {
+      emptyState.hidden = visibleCount > 0;
+    }
+
+    document.querySelectorAll<HTMLAnchorElement>('.header-nav a').forEach((link) => {
+      const linkUrl = new URL(link.href, window.location.origin);
+      const navCat = linkUrl.searchParams.get('category') || '全部';
+      link.classList.toggle('is-active', navCat === activeCategory);
+    });
+  }
+
+  function emitFilterEvent(trigger: string) {
+    const track = (window as unknown as {
+      __dailyCalcTrack?: (name: string, params?: Record<string, unknown>) => void;
+    }).__dailyCalcTrack;
+    if (!track) return;
+    const onlyGod = godTierCheckbox instanceof HTMLInputElement && godTierCheckbox.checked;
+    const hasKeyword =
+      keywordInput instanceof HTMLInputElement && keywordInput.value.trim().length > 0;
+    const sortMode = sortSelect instanceof HTMLSelectElement ? sortSelect.value : 'default';
+    track('filter_products', {
+      trigger,
+      filter_category: activeCategory,
+      god_tier_only: onlyGod,
+      sort_mode: sortMode,
+      has_keyword: hasKeyword,
+    });
+  }
+
+  let keywordTrackTimer: number | undefined;
+
+  function syncCategoryUrl() {
+    const nextUrl = new URL(window.location.href);
+    if (activeCategory === '全部') {
+      nextUrl.searchParams.delete('category');
+    } else {
+      nextUrl.searchParams.set('category', activeCategory);
+    }
+    window.history.replaceState({}, '', nextUrl.toString());
+  }
+
+  filterButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      activeCategory = btn.getAttribute('data-filter-category') || '全部';
+      syncCategoryButtons();
+      syncCategoryUrl();
+      applyFiltersAndSort();
+      emitFilterEvent('category_tab');
+    });
+  });
+
+  document.querySelectorAll<HTMLAnchorElement>('.header-nav a').forEach((link) => {
+    link.addEventListener('click', (event) => {
+      const linkUrl = new URL(link.href, window.location.origin);
+      if (linkUrl.pathname !== '/' && linkUrl.pathname !== window.location.pathname) return;
+      if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+        event.preventDefault();
+        activeCategory = linkUrl.searchParams.get('category') || '全部';
+        syncCategoryButtons();
+        syncCategoryUrl();
+        applyFiltersAndSort();
+        emitFilterEvent('category_tab');
+      }
+    });
+  });
+
+  godTierCheckbox?.addEventListener('change', () => {
+    applyFiltersAndSort();
+    emitFilterEvent('god_tier_toggle');
+  });
+  keywordInput?.addEventListener('input', () => {
+    applyFiltersAndSort();
+    window.clearTimeout(keywordTrackTimer);
+    if (keywordInput instanceof HTMLInputElement && keywordInput.value.trim()) {
+      keywordTrackTimer = window.setTimeout(() => emitFilterEvent('keyword_search'), 800);
+    }
+  });
+  sortSelect?.addEventListener('change', () => {
+    applyFiltersAndSort();
+    emitFilterEvent('sort_select');
+  });
+
+  resetBtn?.addEventListener('click', () => {
+    activeCategory = '全部';
+    if (godTierCheckbox instanceof HTMLInputElement) godTierCheckbox.checked = false;
+    if (keywordInput instanceof HTMLInputElement) keywordInput.value = '';
+    if (sortSelect instanceof HTMLSelectElement) sortSelect.value = 'default';
+    syncCategoryButtons();
+    syncCategoryUrl();
+    applyFiltersAndSort();
+  });
+
+  syncCategoryButtons();
+  applyFiltersAndSort();
+</script>

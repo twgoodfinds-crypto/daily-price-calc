@@ -1,0 +1,51 @@
+---
+import { resolveAdSlot, type AdSlotKey } from '../lib/ads';
+
+interface Props {
+  slotKey: AdSlotKey;
+  adSlotId?: string;
+  class?: string;
+}
+
+const { slotKey, adSlotId, class: className = '' } = Astro.props;
+const resolved = resolveAdSlot(slotKey, adSlotId);
+---
+
+{resolved.renderMode === 'preview' && (
+  <aside
+    class={`ad-slot-wrap ad-slot-preview ${className}`.trim()}
+    aria-label={`廣告預留版位：${resolved.meta.label}`}
+    data-ad-slot-key={resolved.meta.key}
+    style={`min-height: ${resolved.meta.minHeightPx}px;`}
+  >
+    <div class="ad-slot-preview-inner">
+      <span class="ad-slot-badge">AD 版位預覽 · {resolved.meta.key}</span>
+      <strong class="ad-slot-preview-title">{resolved.meta.label}</strong>
+      <span class="ad-slot-preview-meta">
+        {resolved.meta.recommendedSize}（環境變數：<code>{resolved.meta.envVarName}</code>）
+      </span>
+    </div>
+  </aside>
+)}
+
+{resolved.renderMode === 'adsense' && (
+  <aside
+    class={`ad-slot-wrap ad-slot-live ${className}`.trim()}
+    aria-label="贊助廣告"
+    data-ad-slot-key={resolved.meta.key}
+    style={`min-height: ${resolved.meta.minHeightPx}px;`}
+  >
+    <span class="ad-slot-label">贊助廣告</span>
+    <ins
+      class="adsbygoogle"
+      style="display:block"
+      data-ad-client={resolved.adsenseClient}
+      data-ad-slot={resolved.slotId}
+      data-ad-format={resolved.meta.adFormat}
+      data-full-width-responsive="true"
+    />
+    <script is:inline>
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+  </aside>
+)}

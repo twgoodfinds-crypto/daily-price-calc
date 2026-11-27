@@ -1,0 +1,566 @@
+---
+// Placed at top of frontmatter to avoid @astrojs/compiler 4.0.0 duplicate export hoisting bug.
+export function getStaticPaths() {
+  const allProducts = getAllProductsWithMetrics();
+  return allProducts.map((product) => ({
+    params: { slug: product.slug },
+    props: { product, allProducts },
+  }));
+}
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AdSlot from '../../components/AdSlot.astro';
+import {
+  buildProductFaqs,
+  formatCurrency,
+  formatPercent,
+  formatUnitPrice,
+  getAllProductsWithMetrics,
+  sanitizeJsonLd,
+  type ProductWithMetrics,
+} from '../../lib/pricing';
+
+interface Props {
+  product: ProductWithMetrics;
+  allProducts: ProductWithMetrics[];
+}
+
+const { product, allProducts } = Astro.props;
+
+const unitPriceFormatted = formatUnitPrice(product.unitPrice);
+const regularUnitPriceFormatted = formatUnitPrice(product.regularUnitPrice);
+const godTierFormatted = formatUnitPrice(product.god_tier_unit_price);
+const savingsPercentFormatted = formatPercent(product.savingsPercent);
+const savingsAmountFormatted = formatCurrency(product.savingsAmount);
+
+const seoTitle = `${product.brand} ${product.name} 一${product.unit_name}多少錢？箱購單價與神價線實算`;
+const seoDescription = `${product.brand} ${product.name}（共 ${formatCurrency(product.total_units)} ${product.unit_name}）目前酷澎箱購價 NT$${formatCurrency(product.coupang_price)}，除下來每${product.unit_name}約 NT$${unitPriceFormatted}，比一般通路約省 ${savingsPercentFormatted}%。${
+  product.isGodTier
+    ? '已踩進囤貨神價線，想補貨可直接對比下單。'
+    : '常見神價線約 NT$' + godTierFormatted + '/' + product.unit_name + '，頁內附別網比價計算機與同類單價比較表。'
+}`;
+
+const categoryPeers = allProducts
+  .filter((item) => item.category === product.category && item.unit_name === product.unit_name)
+  .sort((a, b) => a.unitPrice - b.unitPrice);
+
+const faqs = buildProductFaqs(product);
+
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((faq) => ({
+    '@type': 'Question',
+    name: faq.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: faq.answer,
+    },
+  })),
+};
+
+const safeFaqJsonLd = sanitizeJsonLd(faqJsonLd);
+---
+
+<BaseLayout
+  title={seoTitle}
+  description={seoDescription}
+  canonicalPath={`/item/${product.slug}`}
+  ogType="article"
+>
+  <script slot="head" type="application/ld+json" set:html={safeFaqJsonLd} />
+
+  <nav class="breadcrumb" aria-label="麵包屑導覽">
+    <a href="/">首頁總覽</a>
+    <span aria-hidden="true">/</span>
+    <a href={`/?category=${encodeURIComponent(product.category)}`}>{product.category}</a>
+    <span aria-hidden="true">/</span>
+    <span>{product.brand} {product.name}</span>
+  </nav>
+
+  <!-- 首屏結論區 -->
+  <section class="section-card" aria-labelledby="verdict-heading">
+    <div class="verdict-layout">
+      <div>
+        <div class="item-badges">
+          <span class="badge badge-category">{product.category}</span>
+          <span class="badge badge-category">{product.brand}</span>
+          {product.isGodTier ? (
+            <span class="badge badge-god">達神價門檻</span>
+          ) : (
+            <span class="badge badge-neutral">
+              距神價門檻差 +{formatUnitPrice(product.godTierDiff)}/{product.unit_name}
+            </span>
+          )}
+        </div>
+
+        <h1 id="verdict-heading" class="item-h1">{seoTitle}</h1>
+
+        <div class="verdict-metrics">
+          <div class={`metric-box ${product.isGodTier ? 'is-god' : 'is-highlight'}`}>
+            <div class="metric-title">酷澎目前折算單價</div>
+            <div class="metric-figure tabular-nums">
+              NT$ {unitPriceFormatted}
+              <span class="unit-price-unit">/{product.unit_name}</span>
+            </div>
+            <div class="metric-sub tabular-nums">
+              神價門檻 ≤ NT$ {godTierFormatted}/{product.unit_name}
+            </div>
+          </div>
+
+          <div class="metric-box">
+            <div class="metric-title">一般通路市價單價</div>
+            <div class="metric-figure tabular-nums">
+              NT$ {regularUnitPriceFormatted}
+              <span class="unit-price-unit">/{product.unit_name}</span>
+            </div>
+            <div class="metric-sub tabular-nums">
+              市價參考 NT$ {formatCurrency(product.regular_price)} / 箱
+            </div>
+          </div>
+
+          <div class="metric-box">
+            <div class="metric-title">箱購現省幅度</div>
+            <div class="metric-figure tabular-nums" style="color: var(--save-text);">
+              省 {savingsPercentFormatted}%
+            </div>
+            <div class="metric-sub tabular-nums">
+              整箱少花 NT$ {savingsAmountFormatted}
+            </div>
+          </div>
+        </div>
+
+        <ul class="feature-list" aria-label="商品規格亮點">
+          {product.features.map((feat) => (
+            <li>{feat}</li>
+          ))}
+        </ul>
+
+        <div class="best-for-box">
+          <strong>比較合拍的族群：</strong>
+          {product.best_for}
+        </div>
+
+        {product.editor_note && (
+          <div class="editor-note-box">
+            <strong>買前實話筆記：</strong>
+            {product.editor_note}
+          </div>
+        )}
+      </div>
+
+      <aside class="offer-sidebar" aria-label="購買與規格摘要">
+        <div class="sidebar-ledger-kicker">COUPANG OFFER SLIP</div>
+        <div class="offer-price-head">
+          <span>酷澎實算賣場價</span>
+          <span class="badge badge-save tabular-nums">較市價 -{savingsPercentFormatted}%</span>
+        </div>
+        <div class="offer-price-now tabular-nums">
+          NT$ {formatCurrency(product.coupang_price)}
+        </div>
+
+        <ul class="offer-meta-list tabular-nums">
+          <li>
+            <span>包裝規格</span>
+            <strong>
+              {product.pack_count > 1
+                ? `${product.pack_count} 組 × ${product.units_per_pack} ${product.unit_name}`
+                : `單件裝（${formatCurrency(product.units_per_pack)} ${product.unit_name}）`}
+            </strong>
+          </li>
+          <li>
+            <span>整箱總數</span>
+            <strong>{formatCurrency(product.total_units)} {product.unit_name}</strong>
+          </li>
+          <li>
+            <span>一般通路原價</span>
+            <span class="regular-price-strike">NT$ {formatCurrency(product.regular_price)}</span>
+          </li>
+          <li>
+            <span>價格快照日期</span>
+            <span>{product.updated_at}</span>
+          </li>
+        </ul>
+
+        <a
+          href={product.coupang_affiliate_url}
+          target="_blank"
+          rel="nofollow sponsored noopener noreferrer"
+          class="btn btn-cta cta-large"
+          data-track-affiliate
+          data-placement="item_sidebar"
+          data-item-slug={product.slug}
+          data-item-name={`${product.brand} ${product.name}`}
+          data-item-category={product.category}
+          data-item-price={product.coupang_price}
+          data-item-unit-price={unitPriceFormatted}
+          data-item-god-tier={product.isGodTier ? 'true' : 'false'}
+        >
+          去酷澎看最新售價 →
+        </a>
+
+        <p class="offer-note">
+          小提醒：賣場價格跟折價券常浮動，點過去先確認賣場選單裡的實際包數／瓶數，再拿下面計算機對一次最保險。
+        </p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- 內嵌即時比價計算機 -->
+  <section
+    id="price-calculator"
+    class="section-card"
+    aria-labelledby="calc-heading"
+    data-track-view-item
+    data-item-slug={product.slug}
+    data-item-name={`${product.brand} ${product.name}`}
+    data-item-category={product.category}
+    data-item-god-tier={product.isGodTier ? 'true' : 'false'}
+    data-coupang-unit-price={product.unitPrice}
+    data-coupang-price={product.coupang_price}
+    data-total-units={product.total_units}
+    data-god-tier={product.god_tier_unit_price}
+    data-unit-name={product.unit_name}
+  >
+    <h2 id="calc-heading" class="section-heading">
+      別網比價計算機（比全聯／momo／蝦皮便宜嗎？）
+    </h2>
+    <p class="section-desc">
+      在賣場或其他電商看到不同包數？把價格跟總{product.unit_name}數填進去，直接幫你除好單價比貴還便宜。
+    </p>
+
+    <div class="calc-grid">
+      <div class="calc-inputs">
+        <div class="field-group">
+          <label for="other-price-input">其他通路看到的價格（NT$）</label>
+          <input
+            type="number"
+            id="other-price-input"
+            min="1"
+            step="1"
+            inputmode="numeric"
+            value={product.regular_price}
+          />
+        </div>
+
+        <div class="field-group">
+          <label for="other-units-input">
+            該商品總數（{product.unit_name}）
+          </label>
+          <input
+            type="number"
+            id="other-units-input"
+            min="1"
+            step="1"
+            inputmode="numeric"
+            value={product.total_units}
+          />
+        </div>
+
+        <div class="calc-helper-row">
+          <div>不知道總數？填入「組數 × 每組{product.unit_name}數」自動幫您乘好：</div>
+          <div class="calc-helper-inputs">
+            <input
+              type="number"
+              id="helper-packs"
+              min="1"
+              step="1"
+              inputmode="numeric"
+              placeholder="組數"
+              aria-label="其他通路商品組數"
+            />
+            <span>×</span>
+            <input
+              type="number"
+              id="helper-per-pack"
+              min="1"
+              step="1"
+              inputmode="numeric"
+              placeholder={`每組${product.unit_name}`}
+              aria-label={`每組${product.unit_name}數`}
+            />
+            <span id="helper-preview" class="tabular-nums"></span>
+          </div>
+        </div>
+      </div>
+
+      <div id="calc-result-box" class="calc-result is-more-expensive" aria-live="polite">
+        <div class="calc-result-label">他網折算每{product.unit_name}單價</div>
+        <div id="calc-other-unit" class="calc-result-unit tabular-nums">
+          NT$ {regularUnitPriceFormatted} /{product.unit_name}
+        </div>
+        <p id="calc-verdict" class="calc-verdict-text tabular-nums">
+          比酷澎貴 NT$ {formatUnitPrice(product.regularUnitPrice - product.unitPrice)} / {product.unit_name}
+        </p>
+        <p id="calc-box-diff" class="calc-sub-note tabular-nums">
+          若換算為本箱同等規格（{formatCurrency(product.total_units)} {product.unit_name}），在酷澎買可省約 NT$ {savingsAmountFormatted}。
+        </p>
+        <div id="calc-god-status"></div>
+      </div>
+    </div>
+  </section>
+
+  <AdSlot slotKey="item-calc" />
+
+  <!-- 同分類單價橫向比較表 -->
+  <section class="section-card" aria-labelledby="compare-heading">
+    <h2 id="compare-heading" class="section-heading">
+      同分類「{product.category}」箱購單價橫向比較表
+    </h2>
+    <p class="section-desc">
+      依目前折算單價由低到高自動排序，點擊商品名稱可切換查看詳細規格與比價試算。
+    </p>
+
+    <div class="table-scroll">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>單價排名</th>
+            <th>品牌與商品名稱</th>
+            <th>箱購總數</th>
+            <th>酷澎箱購價</th>
+            <th>折算單價</th>
+            <th>神價狀態</th>
+            <th>較市價省</th>
+          </tr>
+        </thead>
+        <tbody>
+          {categoryPeers.map((peer, index) => {
+            const isCurrent = peer.slug === product.slug;
+            return (
+              <tr class={isCurrent ? 'is-current' : ''}>
+                <td class="tabular-nums">
+                  <strong>#{index + 1}</strong>
+                  {index === 0 && categoryPeers.length > 1 && (
+                    <div>
+                      <span class="badge badge-save">同單位最低單價</span>
+                    </div>
+                  )}
+                </td>
+                <td>
+                  <a href={`/item/${peer.slug}`}>
+                    {peer.brand} {peer.name}
+                  </a>
+                  {isCurrent && (
+                    <div>
+                      <span class="badge badge-category">目前瀏覽</span>
+                    </div>
+                  )}
+                </td>
+                <td class="tabular-nums">
+                  {formatCurrency(peer.total_units)} {peer.unit_name}
+                  <div style="font-size: 0.76rem; color: var(--text-muted);">
+                    ({peer.pack_count}×{peer.units_per_pack})
+                  </div>
+                </td>
+                <td class="tabular-nums">
+                  <strong>NT$ {formatCurrency(peer.coupang_price)}</strong>
+                </td>
+                <td class="tabular-nums">
+                  <strong>NT$ {formatUnitPrice(peer.unitPrice)}</strong>/{peer.unit_name}
+                </td>
+                <td>
+                  {peer.isGodTier ? (
+                    <span class="badge badge-god">達神價門檻</span>
+                  ) : (
+                    <span class="badge badge-neutral tabular-nums">
+                      門檻 ≤ {formatUnitPrice(peer.god_tier_unit_price)}
+                    </span>
+                  )}
+                </td>
+                <td class="tabular-nums">
+                  <span class="badge badge-save">-{formatPercent(peer.savingsPercent)}%</span>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 自動 FAQ 區塊 -->
+  <section class="section-card" aria-labelledby="faq-heading">
+    <h2 id="faq-heading" class="section-heading">買前常見問題</h2>
+    <p class="section-desc">
+      針對 {product.brand} {product.name} 實算價格跟日常使用上常問的幾個重點：
+    </p>
+
+    <div class="faq-list">
+      {faqs.map((faq) => (
+        <article class="faq-item">
+          <h3 class="faq-question">{faq.question}</h3>
+          <p class="faq-answer">{faq.answer}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <AdSlot slotKey="item-bottom" />
+</BaseLayout>
+
+<script>
+  const calcSection = document.getElementById('price-calculator');
+  const priceInput = document.getElementById('other-price-input');
+  const unitsInput = document.getElementById('other-units-input');
+  const helperPacks = document.getElementById('helper-packs');
+  const helperPerPack = document.getElementById('helper-per-pack');
+  const helperPreview = document.getElementById('helper-preview');
+  const resultBox = document.getElementById('calc-result-box');
+  const resultUnitEl = document.getElementById('calc-other-unit');
+  const verdictEl = document.getElementById('calc-verdict');
+  const boxDiffEl = document.getElementById('calc-box-diff');
+  const godStatusEl = document.getElementById('calc-god-status');
+
+  const coupangUnitPrice = Number(calcSection?.dataset.coupangUnitPrice || 0);
+  const referenceTotalUnits = Number(calcSection?.dataset.totalUnits || 0);
+  const godTierThreshold = Number(calcSection?.dataset.godTier || 0);
+  const unitName = calcSection?.dataset.unitName || '抽';
+
+  function fmtUnit(value: number): string {
+    if (value > 0 && value < 0.1) return value.toFixed(4);
+    return value < 1 ? value.toFixed(3) : value.toFixed(2);
+  }
+
+  function updateCalculator() {
+    if (!(priceInput instanceof HTMLInputElement) || !(unitsInput instanceof HTMLInputElement)) {
+      return;
+    }
+
+    const otherPrice = Number(priceInput.value);
+    const otherUnits = Number(unitsInput.value);
+
+    if (!Number.isFinite(otherPrice) || !Number.isFinite(otherUnits) || otherPrice <= 0 || otherUnits <= 0) {
+      resultBox?.classList.remove('is-more-expensive', 'is-cheaper');
+      if (resultUnitEl) resultUnitEl.textContent = '請輸入有效數值';
+      if (verdictEl) verdictEl.textContent = '價格與總數都必須大於 0 才能計算。';
+      if (boxDiffEl) boxDiffEl.textContent = '';
+      if (godStatusEl) godStatusEl.textContent = '';
+      return;
+    }
+
+    const otherUnitPrice = otherPrice / otherUnits;
+    const diffPerUnit = otherUnitPrice - coupangUnitPrice;
+    const absDiffPerUnit = Math.abs(diffPerUnit);
+    const equivalentBoxDiff = Math.round(absDiffPerUnit * referenceTotalUnits);
+
+    if (resultUnitEl) {
+      resultUnitEl.textContent = `NT$ ${fmtUnit(otherUnitPrice)} /${unitName}`;
+    }
+
+    resultBox?.classList.remove('is-more-expensive', 'is-cheaper');
+
+    if (diffPerUnit > 1e-5) {
+      resultBox?.classList.add('is-more-expensive');
+      if (verdictEl) {
+        verdictEl.textContent = `比酷澎貴 NT$ ${fmtUnit(absDiffPerUnit)} / ${unitName}`;
+      }
+      if (boxDiffEl) {
+        boxDiffEl.textContent = `以本頁箱購總數（${referenceTotalUnits.toLocaleString('zh-TW')} ${unitName}）換算，選擇酷澎可省約 NT$ ${equivalentBoxDiff.toLocaleString('zh-TW')}。`;
+      }
+    } else if (diffPerUnit < -1e-5) {
+      resultBox?.classList.add('is-cheaper');
+      if (verdictEl) {
+        verdictEl.textContent = `比酷澎便宜 NT$ ${fmtUnit(absDiffPerUnit)} / ${unitName}`;
+      }
+      if (boxDiffEl) {
+        boxDiffEl.textContent = `以本頁箱購總數（${referenceTotalUnits.toLocaleString('zh-TW')} ${unitName}）換算，該通路比酷澎更省約 NT$ ${equivalentBoxDiff.toLocaleString('zh-TW')}。`;
+      }
+    } else {
+      if (verdictEl) {
+        verdictEl.textContent = `與目前酷澎單價相同（NT$ ${fmtUnit(coupangUnitPrice)} / ${unitName}）`;
+      }
+      if (boxDiffEl) {
+        boxDiffEl.textContent = '兩邊每單位價格幾乎一致，可依免運門檻或回饋選擇。';
+      }
+    }
+
+    if (godStatusEl) {
+      godStatusEl.textContent = '';
+      const badge = document.createElement('span');
+      if (otherUnitPrice <= godTierThreshold) {
+        badge.className = 'badge badge-god';
+        badge.textContent = `✓ 此價格已達神價門檻（≤ NT$ ${fmtUnit(godTierThreshold)}/${unitName}）`;
+      } else {
+        badge.className = 'badge badge-neutral';
+        badge.textContent = `未達神價門檻（門檻 ≤ NT$ ${fmtUnit(godTierThreshold)}/${unitName}）`;
+      }
+      godStatusEl.appendChild(badge);
+    }
+  }
+
+  function syncHelperTotal() {
+    if (
+      !(helperPacks instanceof HTMLInputElement) ||
+      !(helperPerPack instanceof HTMLInputElement) ||
+      !(unitsInput instanceof HTMLInputElement)
+    ) {
+      return;
+    }
+
+    const packs = Number(helperPacks.value);
+    const perPack = Number(helperPerPack.value);
+    if (packs > 0 && perPack > 0) {
+      const total = Math.round(packs * perPack);
+      unitsInput.value = String(total);
+      if (helperPreview) {
+        helperPreview.textContent = `= ${total.toLocaleString('zh-TW')} ${unitName}`;
+      }
+      updateCalculator();
+    } else if (helperPreview) {
+      helperPreview.textContent = '';
+    }
+  }
+
+  let calcTrackTimer: number | undefined;
+  let hasTrackedCalculatorUse = false;
+
+  function scheduleCalculatorTrack() {
+    window.clearTimeout(calcTrackTimer);
+    calcTrackTimer = window.setTimeout(() => {
+      if (
+        hasTrackedCalculatorUse ||
+        !(priceInput instanceof HTMLInputElement) ||
+        !(unitsInput instanceof HTMLInputElement)
+      ) {
+        return;
+      }
+      const otherPrice = Number(priceInput.value);
+      const otherUnits = Number(unitsInput.value);
+      if (!Number.isFinite(otherPrice) || !Number.isFinite(otherUnits) || otherPrice <= 0 || otherUnits <= 0) {
+        return;
+      }
+      const track = (window as unknown as {
+        __dailyCalcTrack?: (name: string, params?: Record<string, unknown>) => void;
+      }).__dailyCalcTrack;
+      if (!track) return;
+      hasTrackedCalculatorUse = true;
+      track('use_calculator', {
+        item_slug: calcSection?.dataset.itemSlug || '',
+        item_category: calcSection?.dataset.itemCategory || '',
+        other_price: otherPrice,
+        other_units: otherUnits,
+        is_coupang_cheaper: otherPrice / otherUnits > coupangUnitPrice,
+      });
+    }, 1200);
+  }
+
+  priceInput?.addEventListener('input', () => {
+    updateCalculator();
+    scheduleCalculatorTrack();
+  });
+  unitsInput?.addEventListener('input', () => {
+    updateCalculator();
+    scheduleCalculatorTrack();
+  });
+  helperPacks?.addEventListener('input', () => {
+    syncHelperTotal();
+    scheduleCalculatorTrack();
+  });
+  helperPerPack?.addEventListener('input', () => {
+    syncHelperTotal();
+    scheduleCalculatorTrack();
+  });
+
+  updateCalculator();
+</script>

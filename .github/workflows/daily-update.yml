@@ -1,0 +1,71 @@
+name: Daily Price Sync
+
+on:
+  schedule:
+    # 00:00 UTC = 台灣時間每天早上 08:00
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-prices:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Refresh Coupang daily prices
+        env:
+          COUPANG_ACCESS_KEY: ${{ secrets.COUPANG_ACCESS_KEY }}
+          COUPANG_SECRET_KEY: ${{ secrets.COUPANG_SECRET_KEY }}
+        run: python scripts/update_prices.py
+
+      - name: Check for price updates
+        id: changes
+        run: |
+          if [ -n "$(git status --porcelain -- src/data/products.json)" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Node.js
+        if: steps.changes.outputs.changed == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies and verify Astro build
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          PUBLIC_GA_MEASUREMENT_ID: ${{ secrets.PUBLIC_GA_MEASUREMENT_ID }}
+          PUBLIC_CF_ANALYTICS_TOKEN: ${{ secrets.PUBLIC_CF_ANALYTICS_TOKEN }}
+          PUBLIC_ADS_ENABLED: ${{ secrets.PUBLIC_ADS_ENABLED }}
+          PUBLIC_ADS_MODE: ${{ secrets.PUBLIC_ADS_MODE }}
+          PUBLIC_ADSENSE_CLIENT: ${{ secrets.PUBLIC_ADSENSE_CLIENT }}
+          PUBLIC_ADSENSE_SLOT_HOME_FEED: ${{ secrets.PUBLIC_ADSENSE_SLOT_HOME_FEED }}
+          PUBLIC_ADSENSE_SLOT_ITEM_CALC: ${{ secrets.PUBLIC_ADSENSE_SLOT_ITEM_CALC }}
+          PUBLIC_ADSENSE_SLOT_ITEM_BOTTOM: ${{ secrets.PUBLIC_ADSENSE_SLOT_ITEM_BOTTOM }}
+          PUBLIC_ADSENSE_SLOT_FOOTER: ${{ secrets.PUBLIC_ADSENSE_SLOT_FOOTER }}
+        run: |
+          npm ci
+          npm run build
+
+      - name: Commit and push updated prices
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          TODAY=$(TZ=Asia/Taipei date +%Y-%m-%d)
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/products.json
+          git commit -m "chore(prices): update Coupang daily prices (${TODAY})"
+          git push

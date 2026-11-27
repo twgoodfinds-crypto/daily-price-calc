@@ -1,0 +1,199 @@
+---
+import '../styles/global.css';
+import AdSlot from '../components/AdSlot.astro';
+import { getAdsConfig, isValidAdsenseClient } from '../lib/ads';
+import { getAnalyticsConfig } from '../lib/analytics';
+import { CATEGORIES, getAllProductsWithMetrics } from '../lib/pricing';
+
+interface Props {
+  title: string;
+  description: string;
+  canonicalPath?: string;
+  ogType?: 'website' | 'article';
+}
+
+const {
+  title,
+  description,
+  canonicalPath = Astro.url.pathname,
+  ogType = 'website',
+} = Astro.props;
+
+const activeCounts = new Map<string, number>();
+for (const item of getAllProductsWithMetrics()) {
+  activeCounts.set(item.category, (activeCounts.get(item.category) ?? 0) + 1);
+}
+const navCategories = CATEGORIES.filter(
+  (cat) =>
+    ['衛生紙', '洗衣膠囊', '濕紙巾', '紙尿褲'].includes(cat) ||
+    (activeCounts.get(cat) ?? 0) > 0,
+);
+
+const siteBase = Astro.site ?? new URL('https://daily-price-calc.pages.dev');
+const canonicalURL = new URL(canonicalPath, siteBase).toString();
+const adsConfig = getAdsConfig();
+const shouldLoadAdsenseScript =
+  adsConfig.enabled &&
+  adsConfig.mode === 'adsense' &&
+  isValidAdsenseClient(adsConfig.adsenseClient);
+const analyticsConfig = getAnalyticsConfig();
+---
+
+<!doctype html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700;800&family=Noto+Serif+TC:wght@700;900&display=swap"
+      rel="stylesheet"
+    />
+    <meta property="og:locale" content="zh_TW" />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    {shouldLoadAdsenseScript && (
+      <script
+        async
+        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(adsConfig.adsenseClient)}`}
+        crossorigin="anonymous"
+      />
+    )}
+    {analyticsConfig.gaEnabled && (
+      <>
+        <script
+          async
+          src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(analyticsConfig.gaMeasurementId)}`}
+        />
+        <script
+          is:inline
+          define:vars={{
+            gaId: analyticsConfig.gaMeasurementId,
+            gaDebug: analyticsConfig.debug,
+          }}
+        >
+          window.dataLayer = window.dataLayer || [];
+          window.gtag = function gtag() {
+            window.dataLayer.push(arguments);
+          };
+          window.gtag('js', new Date());
+          window.gtag('config', gaId, {
+            anonymize_ip: true,
+            ...(gaDebug ? { debug_mode: true } : {}),
+          });
+        </script>
+      </>
+    )}
+    {analyticsConfig.cfEnabled && (
+      <script
+        defer
+        src="https://static.cloudflareinsights.com/beacon.min.js"
+        data-cf-beacon={JSON.stringify({ token: analyticsConfig.cfAnalyticsToken })}
+      />
+    )}
+    <slot name="head" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="/" class="brand-link">
+          <span class="brand-badge" aria-hidden="true">算</span>
+          <span class="brand-text-wrap">
+            <span class="brand-name">日用品單價筆記</span>
+            <span class="brand-tag">PRICE LEDGER · TW</span>
+          </span>
+        </a>
+        <nav class="header-nav" aria-label="主要分類導覽">
+          <a href="/">全部品項</a>
+          {navCategories.map((cat) => (
+            <a href={`/?category=${encodeURIComponent(cat)}`}>{cat}</a>
+          ))}
+        </nav>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div class="container">
+        <slot />
+        <AdSlot slotKey="footer" />
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <div>
+          <strong>日用品單抽／單顆真實單價試算筆記</strong>
+          <div>
+            把台灣常見箱購日用品拆成單抽／單顆／單片來算，少踩「買大箱卻比較貴」的坑。實際結帳價依賣場當下為主；部分連結為酷澎聯盟行銷分潤連結，不影響您的購買價格。
+          </div>
+        </div>
+        <div class="footer-links">
+          <a href="/">首頁總覽</a>
+          <a href="/sitemap-index.xml">網站地圖</a>
+        </div>
+      </div>
+    </footer>
+
+    <script is:inline define:vars={{ analyticsDebug: analyticsConfig.debug }}>
+      (function () {
+        function trackSiteEvent(eventName, params) {
+          var payload = Object.assign({}, params || {});
+          if (analyticsDebug) {
+            payload.debug_mode = true;
+            if (typeof console !== 'undefined' && console.debug) {
+              console.debug('[analytics]', eventName, payload);
+            }
+          }
+          if (typeof window.gtag === 'function') {
+            window.gtag('event', eventName, payload);
+          }
+        }
+
+        window.__dailyCalcTrack = trackSiteEvent;
+
+        document.addEventListener('click', function (event) {
+          var target = event.target;
+          if (!(target instanceof Element)) return;
+          var link = target.closest('[data-track-affiliate]');
+          if (!(link instanceof HTMLAnchorElement)) return;
+
+          trackSiteEvent('click_affiliate', {
+            item_slug: link.dataset.itemSlug || '',
+            item_name: link.dataset.itemName || '',
+            item_category: link.dataset.itemCategory || '',
+            currency: 'TWD',
+            value: Number(link.dataset.itemPrice || 0) || 0,
+            unit_price: Number(link.dataset.itemUnitPrice || 0) || 0,
+            is_god_tier: link.dataset.itemGodTier === 'true',
+            placement: link.dataset.placement || 'unknown',
+            outbound_url: link.href || '',
+            transport_type: 'beacon',
+          });
+        });
+
+        var viewEl = document.querySelector('[data-track-view-item]');
+        if (viewEl instanceof HTMLElement) {
+          trackSiteEvent('view_item', {
+            item_slug: viewEl.dataset.itemSlug || '',
+            item_name: viewEl.dataset.itemName || '',
+            item_category: viewEl.dataset.itemCategory || '',
+            currency: 'TWD',
+            value: Number(viewEl.dataset.coupangPrice || 0) || 0,
+            unit_price: Number(viewEl.dataset.coupangUnitPrice || 0) || 0,
+            is_god_tier: viewEl.dataset.itemGodTier === 'true',
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,7 @@
+# 每行填寫一個酷澎商品網址，支援以下兩種格式：
+# 1. 商品網址
+# 2. 商品網址 | 分潤短網址
+#
+# 以 # 開頭的註解行與空行會自動略過。範例：
+# https://www.tw.coupang.com/vp/products/123456789?itemId=111222333
+# https://www.tw.coupang.com/vp/products/987654321 | https://coupa.ng/example

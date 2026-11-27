@@ -1,0 +1,17 @@
+{
+  "name": "daily-price-calc",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "description": "台灣日用品單抽／單顆／單片最低單價比價與神價計算站（Astro 靜態網站）",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
+    "astro": "^6.0.0"
+  }
+}
