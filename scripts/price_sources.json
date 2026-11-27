@@ -3,7 +3,7 @@
     "slug": "mit-simple-tissue-150-72",
     "product_id": "529086162042880",
     "source_type": "search",
-    "source_arg": "衛生紙 72包",
+    "source_arg": "簡約組合 抽取式衛生紙 150抽",
     "required_tokens": ["150抽"],
     "min_price": 500,
     "max_price": 1000
@@ -367,5 +367,131 @@
     "required_tokens": ["細緻餐具", "5片", "2包"],
     "min_price": 100,
     "max_price": 240
+  },
+  {
+    "slug": "delight-roll-kitchen-towel-70-24",
+    "product_id": "257299838910475",
+    "source_type": "bestcategories",
+    "source_arg": "1005",
+    "required_tokens": ["70張", "6捲", "4袋"],
+    "min_price": 190,
+    "max_price": 390
+  },
+  {
+    "slug": "andante-3ply-kitchen-towel-80-8",
+    "product_id": "337841615765505",
+    "source_type": "bestcategories",
+    "source_arg": "1005",
+    "required_tokens": ["3層", "80張", "8包"],
+    "min_price": 120,
+    "max_price": 270
+  },
+  {
+    "slug": "scotch-brite-sponge-pot-5-2",
+    "product_id": "460238096384001",
+    "source_type": "bestcategories",
+    "source_arg": "1005",
+    "required_tokens": ["爐具", "5片", "2包"],
+    "min_price": 110,
+    "max_price": 240
+  },
+  {
+    "slug": "scotch-brite-microfiber-cloth-8",
+    "product_id": "458492263497733",
+    "source_type": "bestcategories",
+    "source_arg": "1005",
+    "required_tokens": ["超細纖維抹布", "8條"],
+    "min_price": 95,
+    "max_price": 240
+  },
+  {
+    "slug": "ziploc-storage-bags-m-100-2",
+    "product_id": "265701516328961",
+    "source_type": "bestcategories",
+    "source_arg": "1005",
+    "required_tokens": ["中號", "100個", "2盒"],
+    "min_price": 180,
+    "max_price": 380
+  },
+  {
+    "slug": "newtop-pe-zipper-bag-m-25-4",
+    "product_id": "260547131965445",
+    "source_type": "bestcategories",
+    "source_arg": "1005",
+    "required_tokens": ["中", "25個", "4盒"],
+    "min_price": 95,
+    "max_price": 210
+  },
+  {
+    "slug": "newtop-heat-resistant-bag-140-6",
+    "product_id": "260546238595081",
+    "source_type": "bestcategories",
+    "source_arg": "1005",
+    "required_tokens": ["140入", "6盒"],
+    "min_price": 150,
+    "max_price": 320
+  },
+  {
+    "slug": "kureha-wrap-60m-2",
+    "product_id": "294274289598471",
+    "source_type": "bestcategories",
+    "source_arg": "1005",
+    "required_tokens": ["60m", "2盒"],
+    "min_price": 200,
+    "max_price": 420
+  },
+  {
+    "slug": "nanya-pvc-wrap-60m-3",
+    "product_id": "604674835054592",
+    "source_type": "bestcategories",
+    "source_arg": "1005",
+    "required_tokens": ["60m", "3盒"],
+    "min_price": 140,
+    "max_price": 300
+  },
+  {
+    "slug": "newtop-pe-wrap-20m-6",
+    "product_id": "260563632340998",
+    "source_type": "bestcategories",
+    "source_arg": "1005",
+    "required_tokens": ["20m", "6盒"],
+    "min_price": 95,
+    "max_price": 220
+  },
+  {
+    "slug": "brita-maxtra-pro-pure-4",
+    "product_id": "498632839118855",
+    "source_type": "bestcategories",
+    "source_arg": "1005",
+    "required_tokens": ["MAXTRA PRO", "4個"],
+    "min_price": 550,
+    "max_price": 1050
+  },
+  {
+    "slug": "op-sink-strainer-170",
+    "product_id": "607797930606592",
+    "source_type": "bestcategories",
+    "source_arg": "1005",
+    "required_tokens": ["170片"],
+    "min_price": 70,
+    "max_price": 160
+  },
+  {
+    "slug": "simba-green-bottle-wash-800ml",
+    "product_id": "641489948164124",
+    "source_type": "bestcategories",
+    "source_arg": "1003",
+    "required_tokens": ["800ml"],
+    "min_price": 120,
+    "max_price": 260
+  },
+  {
+    "slug": "kobayashi-kairo-patch-30",
+    "product_id": "680413680746499",
+    "source_type": "bestcategories",
+    "source_arg": "1009",
+    "required_tokens": ["貼式", "30包"],
+    "min_price": 200,
+    "max_price": 420
   }
 ]

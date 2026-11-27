@@ -547,6 +547,15 @@ a {
   font-family: var(--font-mono);
 }
 
+.results-meta-note.is-warn {
+  color: #8a5600;
+  background: #fbf3df;
+  border: 1px solid #e6cf98;
+  border-radius: var(--radius-sm);
+  padding: 0.2rem 0.55rem;
+  font-weight: 600;
+}
+
 /* Product Grid & Spec Sheet Cards */
 .product-grid {
   display: grid;

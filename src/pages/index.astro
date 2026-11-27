@@ -105,9 +105,10 @@ const pageDescription =
 
       <select id="sort-select" class="control-select" aria-label="排序方式">
         <option value="default">預設順序</option>
-        <option value="unit-asc">單價：由低到高</option>
-        <option value="discount-desc">價差幅度：由高到低</option>
-        <option value="god-first">達神價優先</option>
+        <option value="unit-asc">每單位單價：由低到高</option>
+        <option value="total-asc">整箱結帳價：由低到高</option>
+        <option value="discount-desc">較市價折扣：由高到低</option>
+        <option value="god-first">最殺神價優先（低於門檻%）</option>
       </select>
     </div>
   </section>
@@ -116,7 +117,7 @@ const pageDescription =
     <span id="visible-count-text" class="tabular-nums">
       顯示 <strong id="visible-count-num">{products.length}</strong> / {products.length} 項商品
     </span>
-    <span>單價均以酷澎頁顯金額除以總單位數計算</span>
+    <span id="sort-unit-hint" class="results-meta-note">單價均以酷澎頁顯金額除以總單位數計算</span>
   </div>
 
   <section id="product-grid" class="product-grid" aria-label="箱購日用品單價清單">
@@ -127,6 +128,9 @@ const pageDescription =
         data-category={item.category}
         data-god-tier={item.isGodTier ? 'true' : 'false'}
         data-unit-price={item.unitPrice}
+        data-coupang-price={item.coupang_price}
+        data-unit-name={item.unit_name}
+        data-god-margin={((item.god_tier_unit_price - item.unitPrice) / item.god_tier_unit_price).toFixed(6)}
         data-discount={item.savingsPercent}
         data-search={`${item.brand} ${item.name} ${item.category}`.toLowerCase()}
       >
@@ -242,6 +246,7 @@ const pageDescription =
   const cards = Array.from(document.querySelectorAll<HTMLElement>('.product-card'));
   const visibleCountText = document.getElementById('visible-count-text');
   const visibleCountNum = document.getElementById('visible-count-num');
+  const sortUnitHint = document.getElementById('sort-unit-hint');
   const emptyState = document.getElementById('empty-state');
   const resetBtn = document.getElementById('reset-filters-btn');
 
@@ -275,6 +280,9 @@ const pageDescription =
       if (sortMode === 'unit-asc') {
         return Number(a.dataset.unitPrice) - Number(b.dataset.unitPrice);
       }
+      if (sortMode === 'total-asc') {
+        return Number(a.dataset.coupangPrice) - Number(b.dataset.coupangPrice);
+      }
       if (sortMode === 'discount-desc') {
         return Number(b.dataset.discount) - Number(a.dataset.discount);
       }
@@ -282,12 +290,13 @@ const pageDescription =
         const aGod = a.dataset.godTier === 'true' ? 0 : 1;
         const bGod = b.dataset.godTier === 'true' ? 0 : 1;
         if (aGod !== bGod) return aGod - bGod;
-        return Number(a.dataset.unitPrice) - Number(b.dataset.unitPrice);
+        return Number(b.dataset.godMargin) - Number(a.dataset.godMargin);
       }
       return Number(a.dataset.index) - Number(b.dataset.index);
     });
 
     let visibleCount = 0;
+    const visibleUnits = new Set<string>();
 
     sortedCards.forEach((card) => {
       const cardCat = card.dataset.category || '';
@@ -301,9 +310,29 @@ const pageDescription =
       const isVisible = matchesCategory && matchesGod && matchesKeyword;
       card.hidden = !isVisible;
       card.classList.toggle('is-filtered-out', !isVisible);
-      if (isVisible) visibleCount += 1;
+      if (isVisible) {
+        visibleCount += 1;
+        if (card.dataset.unitName) visibleUnits.add(card.dataset.unitName);
+      }
       if (grid) grid.appendChild(card);
     });
+
+    if (sortUnitHint) {
+      if (sortMode === 'unit-asc' && visibleUnits.size > 1) {
+        const previewUnits = Array.from(visibleUnits).slice(0, 4).join('／');
+        sortUnitHint.textContent = `提醒：目前混有「${previewUnits}」等 ${visibleUnits.size} 種單位，建議先點單一分類再比單價最準（比總價請改選「整箱結帳價」）`;
+        sortUnitHint.classList.add('is-warn');
+      } else if (sortMode === 'total-asc') {
+        sortUnitHint.textContent = '依酷澎實付整箱／整組總價由低到高排序（適合找百元湊免運）';
+        sortUnitHint.classList.remove('is-warn');
+      } else if (sortMode === 'god-first') {
+        sortUnitHint.textContent = '依低於各自神價門檻的折數幅度排序（最划算者靠前）';
+        sortUnitHint.classList.remove('is-warn');
+      } else {
+        sortUnitHint.textContent = '單價均以酷澎頁顯金額除以總單位數計算';
+        sortUnitHint.classList.remove('is-warn');
+      }
+    }
 
     if (visibleCountNum) {
       visibleCountNum.textContent = String(visibleCount);
